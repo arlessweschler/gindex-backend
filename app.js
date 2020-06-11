@@ -35,6 +35,10 @@ const userSchema = {
 
 const User = mongoose.model("User", userSchema);
 
+app.get('/', function(req, res){
+  res.send("This is a DB SIte")
+})
+
 app.post('/login', function(req, res){
   User.findOne({ email: req.body.email }, function(error, result){
     if(!error){
