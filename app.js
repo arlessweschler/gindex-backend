@@ -41,7 +41,7 @@ app.get('/', function(req, res){
 
 app.post('/login', function(req, res){
   User.findOne({ email: req.body.email }, function(error, result){
-    if(!error){
+    if(result){
       let passwordIsValid = bcrypt.compareSync(req.body.password, result.password);
       console.log(passwordIsValid);
       if(passwordIsValid){
