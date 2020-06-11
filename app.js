@@ -56,7 +56,7 @@ app.post('/login', function(req, res){
       console.log(passwordIsValid);
       if(passwordIsValid){
         const existUser = result;
-        let token = jwt.sign({ id: existUser._id }, "ThisiasdiasdiasdilongnaonognongongongonPapsaspsowed", {expiresIn: 86400});
+        let token = jwt.sign({ id: existUser._id }, "ThisiasdiasdiasdilongnaonognongongongonPapsaspsowed", {expiresIn: 604800});
         console.log(token);
         res.status(200).send({ auth: true, token: token, user: existUser });
       } else {
@@ -82,7 +82,7 @@ app.post('/register', function(req, res){
        console.log(newUser)
        newUser.save(function(error, doc){
          if(!error){
-           let token = jwt.sign({ id: newUser._id }, "ThisiasdiasdiasdilongnaonognongongongonPapsaspsowed", {expiresIn: 86400});
+           let token = jwt.sign({ id: newUser._id }, "ThisiasdiasdiasdilongnaonognongongongonPapsaspsowed", {expiresIn: 604800});
            console.log(token);
            res.status(200).send({ auth: true, token: token, user: doc });
          } else {
