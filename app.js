@@ -2,6 +2,7 @@
 const express = require('express');
 const DB = require('./db');
 const config = require('./config');
+const axios = require("axios");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
@@ -13,6 +14,18 @@ const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: false }));
 router.use(bodyParser.json());
 
+const site = "https://glorytoheaven-db.herokuapp.com"
+function keepalive() {
+  if (site) {
+    setInterval(async () => {
+      const data = await axios(`https://ping-pong-sn.herokuapp.com/pingback?link=${site}`);
+      console.log("keep alive triggred, status: ", data.status);
+    }, 1560000);
+  } else {
+    console.warn("Set site env var");
+  }
+}
+keepalive();
 // CORS middleware
 const allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
