@@ -1,20 +1,19 @@
-"use strict";
-const express = require('express');
-const DB = require('./db');
-const config = require('./config');
+const express = require("express");
+const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const axios = require("axios");
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const bodyParser = require('body-parser');
 
-const db = new DB("glorydb")
 const app = express();
-const router = express.Router();
+app.use(bodyParser.urlencoded({
+	extended: true
+}));
 
-router.use(bodyParser.urlencoded({ extended: false }));
-router.use(bodyParser.json());
+mongoose.connect(process.env.DBURL, {useNewUrlParser: true,  useUnifiedTopology: true})
 
-const site = "https://glorytoheaven-db.herokuapp.com"
+const site = process.env.SITE;
+
 function keepalive() {
   if (site) {
     setInterval(async () => {
@@ -22,86 +21,64 @@ function keepalive() {
       console.log("keep alive triggred, status: ", data.status);
     }, 1560000);
   } else {
-    console.warn("Set site env var");
+    console.warn("Set site env var. Read docs at https://github.com/patheticGeek/torrent-aio-bot");
   }
 }
+
 keepalive();
-// CORS middleware
-const allowCrossDomain = function(req, res, next) {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', '*');
-    res.header('Access-Control-Allow-Headers', '*');
-    next();
-}
 
-app.use(allowCrossDomain)
+const userSchema = {
+  name: String,
+  email: String,
+	password: String
+};
 
-router.get('/', function(req, res){
-  res.sendFile(__dirname + "/index.html");
+const User = mongoose.model("User", userSchema);
+
+app.post('/login', function(req, res){
+  User.findOne({ email: req.body.email }, function(error, result){
+    if(!error){
+      let passwordIsValid = bcrypt.compareSync(req.body.password, result.password);
+      console.log(passwordIsValid);
+      if(passwordIsValid){
+        const existUser = result;
+        let token = jwt.sign({ id: existUser._id }, "ThisiasdiasdiasdilongnaonognongongongonPapsaspsowed", {expiresIn: 86400});
+        console.log(token);
+        res.status(200).send({ auth: true, token: token, user: existUser });
+      } else {
+        res.status(401).send({ auth: false, token: null });
+      }
+    } else {
+      res.status(200).send({auth: false, token: null });
+    }
+  })
 })
 
-router.get('/login', function(req, res){
-  res.sendFile(__dirname + "/index.html");
+app.post('/register', function(req, res){
+  User.findOne({ email: req.body.email }, function(error, result){
+    if(result){
+      res.send(result);
+      console.log("result");
+    } else if(!result) {
+      const newUser = new User({
+        name: req.body.name,
+        email: req.body.email,
+        password: bcrypt.hashSync(req.body.password, 8)
+      })
+       console.log(newUser)
+       newUser.save(function(error, doc){
+         if(!error){
+           let token = jwt.sign({ id: newUser._id }, "ThisiasdiasdiasdilongnaonognongongongonPapsaspsowed", {expiresIn: 86400});
+           console.log(token);
+           res.status(200).send({ auth: true, token: token, user: doc });
+         } else {
+           res.status(200).send({ auth: false, token: null });
+         }
+       });
+    }
+  })
 })
 
-router.get('/register', function(req, res){
-  res.sendFile(__dirname + "/index.html");
+app.listen(3000, function () {
+	console.log("Server is Running");
 })
-
-router.post('/register', function(req, res) {
-  console.log(db);
-  console.log(req);
-    db.insert([
-        req.body.name,
-        req.body.email,
-        bcrypt.hashSync(req.body.password, 8)
-    ],
-    function (err) {
-        if (err) return res.status(500).send("There was a problem registering the user.")
-        db.selectByEmail(req.body.email, (err,user) => {
-            if (err) return res.status(500).send("There was a problem getting user")
-            let token = jwt.sign({ id: user.id }, config.secret, {expiresIn: 86400 // expires in 24 hours
-            });
-            console.log(token);
-            res.status(200).send({ auth: true, token: token, user: user });
-        });
-    });
-});
-
-router.post('/register-admin', function(req, res) {
-    db.insertAdmin([
-        req.body.name,
-        req.body.email,
-        bcrypt.hashSync(req.body.password, 8),
-        1
-    ],
-    function (err) {
-        if (err) return res.status(500).send("There was a problem registering the user.")
-        db.selectByEmail(req.body.email, (err,user) => {
-            if (err) return res.status(500).send("There was a problem getting user")
-            let token = jwt.sign({ id: user.id }, config.secret, { expiresIn: 86400 // expires in 24 hours
-            });
-            res.status(200).send({ auth: true, token: token, user: user });
-        });
-    });
-});
-
-router.post('/login', (req, res) => {
-    db.selectByEmail(req.body.email, (err, user) => {
-        if (err) return res.status(500).send('Error on the server.');
-        if (!user) return res.status(404).send({auth: false, token: null});
-        let passwordIsValid = bcrypt.compareSync(req.body.password, user.user_pass);
-        if (!passwordIsValid) return res.status(401).send({ auth: false, token: null });
-        let token = jwt.sign({ id: user.id }, config.secret, { expiresIn: 86400 // expires in 24 hours
-        });
-        res.status(200).send({ auth: true, token: token, user: user });
-    });
-})
-
-app.use(router)
-
-let port = process.env.PORT || 3000;
-
-let server = app.listen(port, function() {
-    console.log('Express server listening on port ' + port)
-});
