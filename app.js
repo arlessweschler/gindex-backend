@@ -23,6 +23,18 @@ const allowCrossDomain = function(req, res, next) {
 
 app.use(allowCrossDomain)
 
+router.get('/', function(req, res){
+  res.sendFile(__dirname + "/index.html");
+})
+
+router.get('/login', function(req, res){
+  res.sendFile(__dirname + "/index.html");
+})
+
+router.get('/register', function(req, res){
+  res.sendFile(__dirname + "/index.html");
+})
+
 router.post('/register', function(req, res) {
   console.log(db);
   console.log(req);
