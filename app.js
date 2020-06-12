@@ -98,16 +98,17 @@ app.post('/register-newuser', function(req, res){
 								 newUser.save(function(error, doc){
 									 if(!error){
 										 let transport = nodemailer.createTransport({
-									     host: process.env.EMAILSMTP,
-									     port: process.env.EMAILPORT,
-											 secure: true,
+											 host: process.env.EMAILSMTP,
+										   port: process.env.EMAILPORT,
+										   service:'yahoo',
+										   secure: true,
 									     auth: {
 									        user: process.env.EMAILID,
 									        pass: process.env.EMAILPASS
 									     }
 									 	});
 									 	const message = {
-									     from: process.env.EMAILID, // Sender address
+									     from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
 									     to: req.body.email,         // List of recipients
 									     subject: 'We Have Accepted Your Request.', // Subject line
 									     html: `<b>As Per Your Request We have Registered you in Our Website</b><p>Now You can Login with Your Email</p><p>Here is Your One Time Password - <b>${temporaryPass}</b></p><p>One Time Password is Valid for only 24 Hours</p>` // Plain text body
@@ -119,7 +120,7 @@ app.post('/register-newuser', function(req, res){
 															console.log(error);
 														} else {
 															const adminMessage = {
-														     from: process.env.EMAILID, // Sender address
+														     from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
 														     to: req.body.adminuseremail,         // List of recipients
 														     subject: 'Don\'t Add Spam users', // Subject line
 														     html: `<b>The Recipient You added now is a Spam.</b><p>You have been Restricted from Registering new Users for one Day.</p>` // Plain text body
@@ -157,10 +158,10 @@ app.post('/register-newuser', function(req, res){
 																			console.log(error);
 																		} else {
 																			const deleteMessage = {
-																		     from: process.env.EMAILID, // Sender address
+																		     from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
 																		     to: req.body.email,         // List of recipients
 																		     subject: 'Deletion of Your Account.', // Subject line
-																		     text: `<p>Your Account has been Deleted Automatically, Since You didn't Use One Time Password</p>` // Plain text body
+																		     html: `<p>Your Account has been Deleted Automatically, Since You didn't Use One Time Password</p>` // Plain text body
 																		 	};
 																			transport.sendMail(deleteMessage, function(err, info){
 																				if(err){
