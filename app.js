@@ -84,7 +84,7 @@ app.post('/login', function(req, res){
 					 to: req.body.email,
 					 replyTo: process.env.REPLYTOMAIL,         // List of recipients
 					 subject: 'New Token has Been Generated', // Subject line
-					 html: `<b>New Login Token has been Generated.</p><p> Issue Date - ${issueDate}</p><p> Expiry Date - ${expiryDate}</p>` // Plain text body
+					 html: `<b>Glory to Heaven</b><p>New Login Token has been Generated.</p><p> Issue Date - ${issueDate}</p><p> Expiry Date - ${expiryDate}</p>` // Plain text body
 				};
 				transport.sendMail(tokenMessage, function(error, info){
 					if(error){
@@ -93,12 +93,12 @@ app.post('/login', function(req, res){
 						console.log(info);
 					}
 				})
-        res.status(200).send({ auth: true, token: token, issuedat: issueDate, expiryat: expiryDate });
+        res.status(200).send({ auth: true, registered: true, token: token, issuedat: issueDate, expiryat: expiryDate });
       } else {
-        res.status(401).send({ auth: false, token: null });
+        res.status(401).send({ auth: false, registered: true, token: null, message: "User Password is Wrong" });
       }
     } else {
-      res.status(200).send({auth: false, token: null });
+      res.status(200).send({auth: false, registered: false, token: null, message: "User Not Found with this Email." });
     }
   })
 })
@@ -110,7 +110,7 @@ app.post('/register-newuser', function(req, res){
 					if(bcrypt.compareSync(req.body.adminpass, result.password)){
 						User.findOne({ email: req.body.email }, function(error, result){
 							if(result){
-								res.status(200).send({ auth: true, message: "User Already Exists with this Email" });
+								res.status(200).send({ auth: false, registered: true, message: "User Already Exists with this Email" });
 							} else if(!result) {
 								var temporaryPass = randomstring.generate({ length: 12, charset: 'alphanumeric' });
 								const newUser = new User({
@@ -167,7 +167,7 @@ app.post('/register-newuser', function(req, res){
 																	console.log(error);
 																}
 															})
-															res.status(502).send({ auth: false, token: null, registered: false, message: "It Looks like the Recipient Mail is Spam." })
+															res.status(502).send({ auth: false, registered: false, message: "It Looks like the Recipient Mail is Spam." })
 														}
 													});
 									 	    } else {
@@ -233,24 +233,24 @@ app.post('/register-newuser', function(req, res){
 															}
 														})
 													}, 10800000);
-									 	      res.status(200).send({ auth: true, registered: true, token: null, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 3 hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
+									 	      res.status(200).send({ auth: true, registered: true, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 3 hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
 									 	    }
 									 	});
 									 } else {
-										 res.status(200).send({ auth: false, registered: false, token: null });
+										 res.status(200).send({ auth: true, registered: false, message: "Error Saving User" });
 										 console.log(error);
 									 }
 								 });
 							}
 						})
 					} else {
-							res.status(502).send({ auth: false, registered: false, token: null, message: "Paswords Do not Match with Our Records" })
+							res.status(502).send({ auth: false, registered: true, message: "Your Admin Password does Not Match with our Records" })
 					}
 				} else {
-					res.status(502).send({ auth: false, registered: false, token: null, message: "You are Not Authorized to Create Users" })
+					res.status(502).send({ auth: false, registered: true, message: "You are Unauthorized" })
 				}
 		} else {
-			res.status(502).send({ auth: false, registered: false, token: null, message: "You are Not Authorized to Create Users" })
+			res.status(502).send({ auth: false, registered: false, message: "BAD REQUEST" })
 		}
 	})
 });
@@ -262,7 +262,7 @@ app.post('/register-admin', function(req, res){
 				if(bcrypt.compareSync(req.body.adminpass, result.password)){
 					User.findOne({ email: req.body.email }, function(error, result){
 						if(result){
-							res.status(200).send({ auth: true, message: "User Already Exists with this Email. Try Converting Existing user to Admin/Super Admin" });
+							res.status(200).send({ auth: false, registered: true, message: "User Already Exists with this Email. Try Converting Existing user to Admin/Super Admin" });
 						} else {
 							var temporaryPass = randomstring.generate({ length: 12, charset: 'alphanumeric' });
 							const newUser = new User({
@@ -320,7 +320,7 @@ app.post('/register-admin', function(req, res){
 																console.log(info);
 															}
 														})
-														res.status(502).send({ auth: false, token: null, registered: false, message: "It Looks like the Recipient Mail is Spam." })
+														res.status(502).send({ auth: false, registered: false, message: "It Looks like the Recipient Mail is Spam." })
 													}
 												});
 											} else {
@@ -386,24 +386,24 @@ app.post('/register-admin', function(req, res){
 														}
 													})
 												}, 10800000);
-												res.status(200).send({ auth: true, registered: true, token: null, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 3 Hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
+												res.status(200).send({ auth: true, registered: true, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 3 Hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
 											}
 									});
 								} else {
-									res.status(200).send({ auth: false, registered: false, token: null });
+									res.status(200).send({ auth: false, registered: false, message: "Error Saving User" });
 									console.log(error);
 								}
 							})
 						}
 					})
 				} else {
-					res.status(502).send({ auth: false, registered: false, token: null, message: "Paswords Do not Match with Our Records" })
+					res.status(502).send({ auth: false, registered: false, message: "Admin Password Wrong" })
 				}
 			} else {
-				res.status(502).send({ auth: false, registered: false, token: null, message: "You are Not Authorized to Register Admin Users" })
+				res.status(502).send({ auth: false, registered: false, message: "You are Not Authorized to Register Admin Users" })
 			}
 		} else {
-			res.status(502).send({ auth: false, registered: false, token: null, message: "You are Not Authorized to Register Admin Users" })
+			res.status(502).send({ auth: false, registered: false, message: "BAD REQUEST" })
 		}
 	})
 });
@@ -415,7 +415,7 @@ app.post('/register-superadmin', function(req, res){
 				if(bcrypt.compareSync(req.body.adminpass, result.password)){
 					User.findOne({ email: req.body.email }, function(error, result){
 						if(result){
-							res.status(200).send({ auth: true, message: "User Already Exists with this Email. Try Converting Existing user to Admin/Super Admin" });
+							res.status(200).send({ auth: false, registered: true, message: "User Already Exists with this Email. Try Converting Existing user to Admin/Super Admin" });
 						} else {
 							var temporaryPass = randomstring.generate({ length: 12, charset: 'alphanumeric' });
 							const newUser = new User({
@@ -472,7 +472,7 @@ app.post('/register-superadmin', function(req, res){
 																console.log(info);
 															}
 														})
-														res.status(502).send({ auth: false, token: null, registered: false, message: "It Looks like the Recipient Mail is Spam." })
+														res.status(502).send({ auth: false, registered: false, message: "It Looks like the Recipient Mail is Spam." })
 													}
 												});
 											} else {
@@ -538,24 +538,24 @@ app.post('/register-superadmin', function(req, res){
 														}
 													})
 												}, 10800000);
-												res.status(200).send({ auth: true, registered: true, token: null, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 3 Hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
+												res.status(200).send({ auth: true, registered: true, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 3 Hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
 											}
 									});
 								} else {
-									res.status(200).send({ auth: false, registered: false, token: null });
+									res.status(200).send({ auth: false, registered: false, message: "Error Saving Password" });
 									console.log(error);
 								}
 							})
 						}
 					})
 				} else {
-					res.status(502).send({ auth: false, registered: false, token: null, message: "Paswords Do not Match with Our Records" })
+					res.status(502).send({ auth: false, registered: false, message: "Paswords Do not Match with Our Records" })
 				}
 			} else {
-				res.status(502).send({ auth: false, registered: false, token: null, message: "You are Not Authorized to Register Super Admin Users" })
+				res.status(502).send({ auth: false, registered: false, message: "You are Not Authorized to Register Super Admin Users" })
 			}
 		} else {
-			res.status(502).send({ auth: false, registered: false, token: null, message: "You are Not Authorized to Register Super Admin Users" })
+			res.status(502).send({ auth: false, registered: false, message: "You are Not Authorized to Register Super Admin Users" })
 		}
 	})
 });
@@ -568,9 +568,9 @@ app.post('/adminperms', function(req, res){
 					User.findOne({ email: req.body.email }, function(error, result){
 						if(result){
 							if(result.superadmin){
-								res.status(200).send({ auth: true, message: "User is Already a Super Admin" });
+								res.status(200).send({ auth: true, changed: false, message: "User is Already a Super Admin" });
 							} else if(result.admin) {
-								res.status(200).send({ auth: true, message: "User is Already a Admin" });
+								res.status(200).send({ auth: true, changed: false, message: "User is Already a Admin" });
 							} else {
 								User.updateOne({ email: req.body.email }, { $set: { admin: true, role: "Admin" } }, function(error){
 									if(!error){
@@ -589,24 +589,24 @@ app.post('/adminperms', function(req, res){
 												console.log(info);
 											}
 										})
-										res.status(200).send({ auth: true, token: true, registered: true, changed: true, message: "User has been Promoted to Super Admin" });
+										res.status(200).send({ auth: true, registered: true, changed: true, message: "User has been Promoted to Super Admin" });
 									} else {
-											res.status(502).send({ auth: true, token: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
+											res.status(502).send({ auth: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
 									}
 								})
 							}
 						} else {
-							res.status(502).send({ auth: true, token: true, registered: true, changed: true, message: "No User Found with this Email" });
+							res.status(502).send({ auth: true, registered: true, changed: false, message: "No User Found with this Email" });
 						}
 					});
 				} else {
-					res.status(502).send({ auth: false, token: true, registered: true, changed: false, message: "Your Admin Password is Wrong" });
+					res.status(502).send({ auth: false, registered: true, changed: false, message: "Your Admin Password is Wrong" });
 				}
 			} else {
-				res.status(502).send({ auth: false, token: false, registered: false, changed: false, message: "You are Unauthorized" });
+				res.status(502).send({ auth: false, registered: false, changed: false, message: "You are Unauthorized" });
 			}
 		} else {
-			res.status(502).send({ auth: false, token: false, registered: false, changed: false, message: "BAD REQUEST" });
+			res.status(502).send({ auth: false, registered: false, changed: false, message: "BAD REQUEST" });
 		}
 	})
 });
@@ -617,17 +617,17 @@ app.post('/superadminperms', function(req, res){
 			if(result.admin && result.superadmin){
 				if(bcrypt.compareSync(req.body.adminpass, result.password)){
 					if(result.temprestricted){
-						res.status(200).send({ auth: true, token: true, registered: true, changed: false, message: "You Have been Temporarily Restricted from Modifying Permissions of Users." });
+						res.status(200).send({ auth: false, registered: true, changed: false, message: "You Have been Temporarily Restricted from Modifying Permissions of Users." });
 					} else {
 						User.findOne({ email: req.body.email }, function(error, result){
 							if(result){
 								if(result.admin){
 									if(result.superadmin){
-										res.status(502).send({ auth: true, token: true, registered: true, changed: false, message: "User is already a Super Admin" });
+										res.status(502).send({ auth: true, registered: true, changed: false, message: "User is already a Super Admin" });
 									} else {
 										User.updateOne({ email: req.body.email }, { $set: { superadmin: true, role: "Super Admin" } }, function(error){
 											if(error){
-												res.status(502).send({ auth: true, token: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
+												res.status(502).send({ auth: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
 											} else {
 												const promoteMessage = {
 													 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
@@ -644,23 +644,23 @@ app.post('/superadminperms', function(req, res){
 														console.log(info);
 													}
 												})
-												res.status(200).send({ auth: true, token: true, registered: true, changed: true, message: "User has been Promoted to Admin" });
+												res.status(200).send({ auth: true, registered: true, changed: true, message: "User has been Promoted to Admin" });
 											}
 										})
 									}
 								} else {
-									res.status(502).send({ auth: true, token: true, registered: true, changed: false, message: "User Should be a Admin to be Promoted to Super Admin" });
+									res.status(502).send({ auth: true, registered: true, changed: false, message: "User Should be a Admin to be Promoted to Super Admin" });
 								}
 							} else {
-								res.status(502).send({ auth: true, token: true, registered: true, changed: false, message: "No User Found with this Email" });
+								res.status(502).send({ auth: true, registered: false, changed: false, message: "No User Found with this Email" });
 							}
 						})
 					}
 				} else {
-					res.status(502).send({ auth: false, token: true, registered: true, changed: false, message: "Your Admin Password is Wrong" });
+					res.status(502).send({ auth: false, registered: true, changed: false, message: "Your Admin Password is Wrong" });
 				}
 			} else {
-				res.status(502).send({ auth: false, token: false, registered: false, changed: false, message: "You are Unauthorized" });
+				res.status(502).send({ auth: false, registered: false, changed: false, message: "You are Unauthorized" });
 			}
 		} else {
 			res.status(502).send({ auth: false, token: false, registered: false, changed: false, message: "BAD REQUEST" });
@@ -674,45 +674,49 @@ app.post('/deleteuser', function(req, res){
 			if(result.admin){
 				if(bcrypt.compareSync(req.body.adminpass, result.password)){
 					if(result.temprestricted){
-						res.status(200).send({ auth: true, token: true, registered: true, changed: false, message: "You Have been Temporarily Restricted from Modifying Permissions of Users." });
+						res.status(200).send({ auth: false, registered: true, deleted: false, message: "You Have been Temporarily Restricted from Modifying Permissions of Users." });
 					} else {
 						User.findOne({ email: req.body.email }, function(error, result){
 							if(result){
-								User.deleteOne({ email: req.body.email }, function(error){
-									if(error){
-										res.status(502).send({ auth: true, token: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
-									} else {
-										const deleteMessage = {
-											 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-											 to: req.body.email,
-											 bcc: req.body.ADMINEMAIL,
-											 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-											 subject: 'Account has been Deleted.', // Subject line
-											 html: `<p>Your Account has been Deleted by Super Admin - ${req.body.adminuseremail}</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You.</p>` // Plain text body
-										};
-										transport.sendMail(deleteMessage, function(error, info){
-											if(error){
-												console.log(error);
-											} else {
-												console.log(info);
-											}
-										})
-										res.status(200).send({ auth: true, token: true, registered: true, changed: true, message: "User has been deleted" });
-									}
-								})
+								if(result.admin){
+									res.status(200).send({ auth: false, registered: true, deleted: false, message: "You are Trying to Remove a Admin. Permission Scope Not there." });
+								} else {
+									User.deleteOne({ email: req.body.email }, function(error){
+										if(error){
+											res.status(502).send({ auth: true, registered: true, deleted: false, message: "Some Error Pinging the Servers. Try Again Later." });
+										} else {
+											const deleteMessage = {
+												 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+												 to: req.body.email,
+												 bcc: req.body.ADMINEMAIL,
+												 replyTo: process.env.REPLYTOMAIL,         // List of recipients
+												 subject: 'Account has been Deleted.', // Subject line
+												 html: `<p>Your Account has been Deleted by Super Admin - ${req.body.adminuseremail}</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You.</p>` // Plain text body
+											};
+											transport.sendMail(deleteMessage, function(error, info){
+												if(error){
+													console.log(error);
+												} else {
+													console.log(info);
+												}
+											})
+											res.status(200).send({ auth: true, registered: true, deleted: true, message: "User has been deleted" });
+										}
+									})
+								}
 							} else {
-								res.status(502).send({ auth: true, token: true, registered: true, changed: false, message: "No User Found with this Email" });
+								res.status(502).send({ auth: true, registered: true, deleted: false, message: "No User Found with this Email" });
 							}
 						})
 					}
 				} else {
-					res.status(502).send({ auth: false, token: true, registered: true, changed: false, message: "Your Admin Password is Wrong" });
+					res.status(502).send({ auth: false, registered: true, deleted: false, message: "Your Admin Password is Wrong" });
 				}
 			} else {
-				res.status(502).send({ auth: false, token: false, registered: false, changed: false, message: "You are Unauthorized" });
+				res.status(502).send({ auth: false, registered: false, deleted: false, message: "You are Unauthorized" });
 			}
 		} else {
-			res.status(502).send({ auth: false, token: false, registered: false, changed: false, message: "BAD REQUEST" });
+			res.status(502).send({ auth: false, registered: false, deleted: false, message: "BAD REQUEST" });
 		}
 	})
 });
@@ -723,13 +727,13 @@ app.post('/deleteadmin', function(req, res){
 			if(result.admin && result.superadmin){
 				if(bcrypt.compareSync(req.body.adminpass, result.password)){
 					if(result.temprestricted){
-						res.status(200).send({ auth: true, token: true, registered: true, changed: false, message: "You Have been Temporarily Restricted from Modifying Permissions of Users." });
+						res.status(200).send({ auth: false, registered: true, deleted: false, message: "You Have been Temporarily Restricted from Modifying Permissions of Users." });
 					} else {
 						User.findOne({ email: req.body.email }, function(error, result){
 							if(result){
 								User.deleteOne({ email: req.body.email }, function(error){
 									if(error){
-										res.status(502).send({ auth: true, token: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
+										res.status(502).send({ auth: true, token: true, registered: true, deleted: false, message: "Some Error Pinging the Servers. Try Again Later." });
 									} else {
 										const deleteMessage = {
 											 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
@@ -746,21 +750,22 @@ app.post('/deleteadmin', function(req, res){
 												console.log(info);
 											}
 										});
+										res.status(200).send({ auth: true, registered: true, deleted: true, message: "User has been deleted" });
 									}
 								})
 							} else {
-								res.status(502).send({ auth: true, token: true, registered: true, changed: false, message: "No User Found with this Email" });
+								res.status(502).send({ auth: true, registered: true, deleted: false, message: "No User Found with this Email" });
 							}
 						})
 					}
 				} else {
-					res.status(502).send({ auth: false, token: true, registered: true, changed: false, message: "Your Admin Password is Wrong" });
+					res.status(502).send({ auth: false, registered: true, deleted: false, message: "Your Admin Password is Wrong" });
 				}
 			} else {
-				res.status(502).send({ auth: false, token: false, registered: false, changed: false, message: "You are Unauthorized" });
+				res.status(502).send({ auth: false, registered: false, deleted: false, message: "You are Unauthorized" });
 			}
 		} else {
-			res.status(502).send({ auth: false, token: false, registered: false, changed: false, message: "BAD REQUEST" });
+			res.status(502).send({ auth: false, registered: false, deleted: false, message: "BAD REQUEST" });
 		}
 	})
 })
@@ -776,7 +781,7 @@ app.post('/verify', function(req, res){
 			console.log(expiryDate);
 			res.status(200).send({ auth: true, registered: true, tokenuser: decoded, issuedate: issueDate, expirydate: expiryDate });
 		} else {
-			res.status(502).send({auth: false, registered: false, error: error});
+			res.status(502).send({auth: false, registered: false, error: error, tokenuser: null});
 		}
 	});
 })
@@ -788,13 +793,13 @@ app.post('/change-password', function(req, res){
 				var newPass = req.body.newpassword;
 				User.updateOne({ email: req.body.email }, {$set: { password: bcrypt.hashSync(newPass, 10), temppassword: null }}, function(error){
 					if(!error){
-						res.status(200).send({ auth: true, token: true, registered: true, changed: true, message: 'Password Successfully Changed'});
+						res.status(200).send({ auth: true, registered: true, changed: true, message: 'Password Successfully Changed'});
 					} else {
-						res.status(200).send({ auth: true, token: true, registered: true, changed: false, message: 'Error While Changing password'})
+						res.status(200).send({ auth: true, registered: true, changed: false, message: 'Error While Changing password'})
 					}
 				})
 			} else {
-				res.status(502).send({ auth: true, token: true, registered: true, changed: false, message: "Paswords Do not Match with Our Records" })
+				res.status(502).send({ auth: true, registered: true, changed: false, message: "Paswords Do not Match with Our Records" })
 			}
 		} else {
 			res.status(502).send({ auth: false, registered: false, changed: false, message: "Bad Request" })
@@ -827,16 +832,16 @@ app.post('/change-otp', function(req, res){
 									console.log(info);
 								}
 							});
-							res.status(200).send({ auth: true, token: true, registered: true, changed: true, message: 'Password Successfully Changed'});
+							res.status(200).send({ auth: true, registered: true, changed: true, message: 'Password Successfully Changed'});
 						} else {
-							res.status(200).send({ auth: true, token: true, registered: true, changed: false, message: 'Error While Changing password'})
+							res.status(200).send({ auth: true, registered: true, changed: false, message: 'Error While Changing password'})
 						}
 					})
 				} else {
-					res.status(502).send({ auth: true, token: true, registered: true, changed: false, message: "Wrong OTP" })
+					res.status(502).send({ auth: true, registered: true, changed: false, message: "Wrong OTP" })
 				}
 			} else {
-				res.status(502).send({ auth: true, token: true, registered: true, changed: false, message: "It Looks Like You Already set Your Password with OTP and Its Expired." })
+				res.status(502).send({ auth: true, registered: true, changed: false, message: "It Looks Like You Already set Your Password with OTP and Its Expired." })
 			}
 		} else {
 			res.status(502).send({ auth: false, registered: false, changed: false, message: "Bad Request" })
