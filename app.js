@@ -354,7 +354,7 @@ app.post('/register-admin', function(req, res){
 																					} else {
 																						console.log(info);
 																					}
-																				)}
+																				});
 																				setTimeout(() => {
 																					User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: false } }, function(error){
 																						if(error){
@@ -506,7 +506,7 @@ app.post('/register-superadmin', function(req, res){
 																					} else {
 																						console.log(info);
 																					}
-																				)}
+																				});
 																				setTimeout(() => {
 																					User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: false } }, function(error){
 																						if(error){
@@ -721,7 +721,7 @@ app.post('/deleteadmin', function(req, res){
 	User.findOne({ email: req.body.adminuseremail }, function(error, result){
 		if(result){
 			if(result.admin && result.superadmin){
-				if(bcrypt.compareSync(req.body.adminpass, result.password){
+				if(bcrypt.compareSync(req.body.adminpass, result.password)){
 					if(result.temprestricted){
 						res.status(200).send({ auth: true, token: true, registered: true, changed: false, message: "You Have been Temporarily Restricted from Modifying Permissions of Users." });
 					} else {
@@ -745,7 +745,7 @@ app.post('/deleteadmin', function(req, res){
 											} else {
 												console.log(info);
 											}
-										)}
+										});
 									}
 								})
 							} else {
