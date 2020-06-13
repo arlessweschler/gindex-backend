@@ -112,7 +112,7 @@ app.post('/register-newuser', function(req, res){
 							if(result){
 								res.status(200).send({ auth: false, registered: true, message: "User Already Exists with this Email" });
 							} else if(!result) {
-								var temporaryPass = randomstring.generate({ length: 12, charset: 'alphanumeric' });
+								var temporaryPass = randomstring.generate({ length: 8, charset: 'alphanumeric' });
 								const newUser = new User({
 									name: req.body.name,
 									email: req.body.email,
@@ -264,7 +264,7 @@ app.post('/register-admin', function(req, res){
 						if(result){
 							res.status(200).send({ auth: false, registered: true, message: "User Already Exists with this Email. Try Converting Existing user to Admin/Super Admin" });
 						} else {
-							var temporaryPass = randomstring.generate({ length: 12, charset: 'alphanumeric' });
+							var temporaryPass = randomstring.generate({ length: 8, charset: 'alphanumeric' });
 							const newUser = new User({
 								name: req.body.name,
 								email: req.body.email,
@@ -417,7 +417,7 @@ app.post('/register-superadmin', function(req, res){
 						if(result){
 							res.status(200).send({ auth: false, registered: true, message: "User Already Exists with this Email. Try Converting Existing user to Admin/Super Admin" });
 						} else {
-							var temporaryPass = randomstring.generate({ length: 12, charset: 'alphanumeric' });
+							var temporaryPass = randomstring.generate({ length: 8, charset: 'alphanumeric' });
 							const newUser = new User({
 								name: req.body.name,
 								email: req.body.email,
