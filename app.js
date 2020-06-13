@@ -201,7 +201,7 @@ app.post('/register-newuser', function(req, res){
 																						} else {
 																							console.log(info);
 																						}
-																					)}
+																					});
 																					setTimeout(() => {
 																						User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: false } }, function(error){
 																							if(error){
