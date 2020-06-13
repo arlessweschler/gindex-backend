@@ -129,7 +129,7 @@ app.post('/register-newuser', function(req, res){
 									     to: req.body.email,
 											 replyTo: process.env.REPLYTOMAIL,
 									     subject: 'We Have Accepted Your Request.', // Subject line
-									     html: `<b>As Per Your Request We have Registered you in Our Website</b><p>Now You can Login with Your Email</p><p>Here is Your One Time Password - <b>${temporaryPass}</b></p><p>One Time Password is Valid for only 24 Hours</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+									     html: `<b>As Per Your Request We have Registered you in Our Website</b><p>Now You can Login with Your Email</p><p>Here is Your One Time Password - <b>${temporaryPass}</b></p><p>One Time Password is Valid for only 3 Hours</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
 									 	};
 									 	transport.sendMail(message, function(err, info) {
 									 	    if (err) {
@@ -282,7 +282,7 @@ app.post('/register-admin', function(req, res){
 										bcc: process.env.ADMINEMAIL,
 										replyTo: process.env.REPLYTOMAIL,
 										subject: 'You have been Appointed as Admin', // Subject line
-										html: `<b>As Per Your Request We have Registered you in Our Website as a Admin</b><p>Now You can Login with Your Email</p><p>Here is Your One Time Password - <b>${temporaryPass}</b></p><p>Note: One Time Password is Valid for only 24 Hours</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+										html: `<b>As Per Your Request We have Registered you in Our Website as a Admin</b><p>Now You can Login with Your Email</p><p>Here is Your One Time Password - <b>${temporaryPass}</b></p><p>Note: One Time Password is Valid for only 3 Hours</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
 									}
 									transport.sendMail(message, function(err, info) {
 											if (err) {
@@ -386,7 +386,7 @@ app.post('/register-admin', function(req, res){
 														}
 													})
 												}, 10800000);
-												res.status(200).send({ auth: true, registered: true, token: null, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 24 hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
+												res.status(200).send({ auth: true, registered: true, token: null, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 3 Hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
 											}
 									});
 								} else {
@@ -434,7 +434,7 @@ app.post('/register-superadmin', function(req, res){
 										to: req.body.email,
 										replyTo: process.env.REPLYTOMAIL,
 										subject: 'You have been Appointed as Super Admin', // Subject line
-										html: `<b>As Per Your Request We have Registered you in Our Website as a Admin</b><p>Now You can Login with Your Email</p><p>Here is Your One Time Password - <b>${temporaryPass}</b></p><p>Note: One Time Password is Valid for only 24 Hours</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+										html: `<b>As Per Your Request We have Registered you in Our Website as a Admin</b><p>Now You can Login with Your Email</p><p>Here is Your One Time Password - <b>${temporaryPass}</b></p><p>Note: One Time Password is Valid for only 3 Hours</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
 									}
 									transport.sendMail(message, function(err, info) {
 											if (err) {
@@ -538,7 +538,7 @@ app.post('/register-superadmin', function(req, res){
 														}
 													})
 												}, 10800000);
-												res.status(200).send({ auth: true, registered: true, token: null, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 24 hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
+												res.status(200).send({ auth: true, registered: true, token: null, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 3 Hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
 											}
 									});
 								} else {
