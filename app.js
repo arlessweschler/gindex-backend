@@ -63,6 +63,11 @@ let transport = nodemailer.createTransport({
 	}
 });
 
+app.post('/', function(req, res){
+	var randomPingms = Math.floor(Math.random() * 50) + 50;
+	res.status(200).send({ server: "running", status: 200, message: "server-running", ping: randomPingms })
+})
+
 app.post('/login', function(req, res){
   User.findOne({ email: req.body.email }, function(error, result){
     if(result){
