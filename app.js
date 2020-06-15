@@ -49,9 +49,25 @@ const userSchema = {
 	role: { type: String, required: true, default: 'user' },
 	admin: { type: Boolean, required: true, default: false },
 	superadmin: { type: Boolean, required: true, default: false },
+	verified: { type: Boolean, required: true, default: false },
 };
 
+const pendingUserSchema = {
+	name: { type: String, required: true },
+	email: { type: String, lowercase: true, required: true, unique: true },
+	message: { type: String }
+};
+
+const spamUserSchema = {
+	name: { type: String, required: true },
+	email: { type: String, required: true, unique: true, lowercase: true },
+	flaggedby: { type: String, required: true, lowercase: true },
+	reason: { type: String, required: true }
+}
+
 const User = mongoose.model("User", userSchema);
+const PendingUser = mongoose.model("PendingUser", pendingUserSchema);
+const SpamUser = mongoose.model("SpanUser", spamUserSchema);
 
 let transport = nodemailer.createTransport({
 	host: process.env.EMAILSMTP,
@@ -97,7 +113,15 @@ app.post('/login', function(req, res){
 				// 		console.log(info);
 				// 	}
 				// })
-        res.status(200).send({ auth: true, registered: true, token: token, issuedat: issueDate, expiryat: expiryDate });
+				const userData = {
+					email: existUser.email,
+					name: existUser.name,
+					admin: existUser.admin,
+					role: existUser.role,
+					superadmin: existUser.superadmin,
+					verified: existUser.verified,
+				}
+        res.status(200).send({ auth: true, registered: true, token: token, tokenuser:userData, issuedat: issueDate, expiryat: expiryDate });
       } else {
         res.status(200).send({ auth: false, registered: true, token: null, message: "User Password is Wrong" });
       }
@@ -105,6 +129,56 @@ app.post('/login', function(req, res){
       res.status(200).send({auth: false, registered: false, token: null, message: "User Not Found with this Email." });
     }
   })
+})
+
+app.post('/request', function(req, res){
+	User.findOne({ email: req.body.email }, function(error, result){
+		if(result){
+			res.status(200).send({auth: false, registered: false, message: "User already there with this Email." });
+		} else {
+			PendingUser.findOne({ email: req.body.email }, function(error, result){
+				if(result){
+					res.status(200).send({auth: false, registered: false, message: "You are Already in Pending Users List. Please Be Patient. Your Request will be Processed." });
+				} else {
+					User.find({ admin: true }, function(error, result){
+						let adminEmails = [];
+						result.forEach((admin, i) => {
+							adminEmails.push(admin.email)
+						});
+						const adminMessage = {
+							 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+							 to: adminEmails,
+							 replyTo: process.env.REPLYTOMAIL,
+							 subject: 'Glory to Heaven - Access Request', // Subject line
+							 html: `<p>The Following Person has Requested Access to Glory to Heaven Content.</p><p>If You Know him it is Well and Good, but Don't Accept Unwanted Request and Bloat the Website</p><b><u>Details:</u></b><p>Name: - <b>${req.body.name}</b></p><p>Email - <b>${req.body.email}</b></p><p>Message from Recipient - <b>${req.body.message}</b></p>Any Issues, Reply to this Mail, Our Super Admins will Contact You<p>` // Plain text body
+						};
+						const userMessage = {
+							 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+							 to: req.body.email,
+							 replyTo: process.env.REPLYTOMAIL,
+							 subject: 'Your Request is Pending Confirmation.', // Subject line
+							 html: `<p>Your Request is Pending Confirmation from Admins.</p><p>Till we Process the Data, Please be Patient.</p><p>On Confirmation You will get a Email regarding Confirmation and a OTP will be Sent to Activate your Account</b></p><p>You have to  Activate Your Account within 3 Hours of Confirmation Mail, Otherwise your Account will be deleted Automatically.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+						};
+						transport.sendMail(adminMessage, function(error, info){
+							if(error){
+								console.log(error);
+							} else {
+								console.log(info);
+							}
+						})
+						transport.sendMail(userMessage, function(error, info){
+							if(error){
+								console.log(error);
+							} else {
+								console.log(info);
+							}
+						})
+						res.status(200).send({auth: true, registered: true, message: "Your Request has been Sent to our Admins for Processing" });
+					})
+				}
+			})
+		}
+	})
 })
 
 app.post('/register-newuser', function(req, res){
@@ -123,7 +197,8 @@ app.post('/register-newuser', function(req, res){
 									temppassword: bcrypt.hashSync(temporaryPass, 10),
 									role: "User",
 									admin: false,
-									superadmin: false
+									superadmin: false,
+									verified: false,
 								})
 								 console.log(newUser)
 								 newUser.save(function(error, doc){
@@ -275,7 +350,8 @@ app.post('/register-admin', function(req, res){
 								temppassword: bcrypt.hashSync(temporaryPass, 10),
 								role: "Admin",
 								admin: true,
-								superadmin: false
+								superadmin: false,
+								verified: false,
 							})
 							console.log(newUser)
 							newUser.save(function(error, doc){
@@ -428,7 +504,8 @@ app.post('/register-superadmin', function(req, res){
 								temppassword: bcrypt.hashSync(temporaryPass, 10),
 								role: "Super Admin",
 								admin: true,
-								superadmin: true
+								superadmin: true,
+								verified: true,
 							})
 							console.log(newUser)
 							newUser.save(function(error, doc){
@@ -785,7 +862,7 @@ app.post('/verify', function(req, res){
 			console.log(expiryDate);
 			res.status(200).send({ auth: true, registered: true, tokenuser: decoded, issuedate: issueDate, expirydate: expiryDate });
 		} else {
-			res.status(200).send({auth: false, registered: false, error: error, tokenuser: null});
+			res.status(200).send({auth: false, registered: false, tokenuser: null});
 		}
 	});
 })
@@ -819,7 +896,7 @@ app.post('/change-otp', function(req, res){
 			if(tempPassIsThere && passNotThere){
 				if(bcrypt.compareSync(req.body.otp, result.temppassword)){
 					var newPass = req.body.newpassword;
-					User.updateOne({ email: req.body.email }, {$set: { password: bcrypt.hashSync(newPass, 10), temppassword: null }}, function(error){
+					User.updateOne({ email: req.body.email }, {$set: { password: bcrypt.hashSync(newPass, 10), temppassword: null, verified: true }}, function(error){
 						if(!error){
 							const otpMessage = {
 								 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
@@ -836,7 +913,7 @@ app.post('/change-otp', function(req, res){
 									console.log(info);
 								}
 							});
-							res.status(200).send({ auth: true, registered: true, changed: true, message: 'Password Successfully Changed'});
+							res.status(200).send({ auth: true, registered: true, changed: true, message: `Your email ${req.body.email} has been Verified.`});
 						} else {
 							res.status(200).send({ auth: true, registered: true, changed: false, message: 'Error While Changing password'})
 						}
@@ -845,7 +922,7 @@ app.post('/change-otp', function(req, res){
 					res.status(200).send({ auth: true, registered: true, changed: false, message: "Wrong OTP" })
 				}
 			} else {
-				res.status(200).send({ auth: true, registered: true, changed: false, message: "It Looks Like You Already set Your Password with OTP and Its Expired." })
+				res.status(200).send({ auth: true, registered: true, changed: false, message: "It Looks Like You Already Have been Verified" })
 			}
 		} else {
 			res.status(200).send({ auth: false, registered: false, changed: false, message: "Bad Request" })
