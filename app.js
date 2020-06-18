@@ -1,3 +1,4 @@
+// Inititalisation
 require('dotenv').config();
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -14,6 +15,7 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json());
 
+// Allow Cross Origin Requests
 const allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', '*');
@@ -25,8 +27,8 @@ app.use(allowCrossDomain)
 
 mongoose.connect(process.env.DBURL, {useNewUrlParser: true,  useUnifiedTopology: true, useCreateIndex: true})
 
+// Keep Site Online By Pinging every 25 Minutes.
 const site = process.env.SITE;
-
 function keepalive() {
   if (site) {
     setInterval(async () => {
@@ -37,9 +39,9 @@ function keepalive() {
     console.warn("Set site env var");
   }
 }
-
 keepalive();
 
+// User Database Model
 const userSchema = {
   name: { type: String, required: true },
   email: { type: String, lowercase: true, required: true, unique: true },
@@ -52,12 +54,15 @@ const userSchema = {
 	verified: { type: Boolean, required: true, default: false },
 };
 
+// Pending User Database Model
 const pendingUserSchema = {
 	name: { type: String, required: true },
+	post: { type: String, required: true },
 	email: { type: String, lowercase: true, required: true, unique: true },
 	message: { type: String }
 };
 
+// Spam User Database Model
 const spamUserSchema = {
 	name: { type: String, required: true },
 	email: { type: String, required: true, unique: true, lowercase: true },
@@ -65,14 +70,16 @@ const spamUserSchema = {
 	reason: { type: String, required: true }
 }
 
+// Defining Mongoose Model
 const User = mongoose.model("User", userSchema);
 const PendingUser = mongoose.model("PendingUser", pendingUserSchema);
 const SpamUser = mongoose.model("SpanUser", spamUserSchema);
 
+// Define Mail Transporter
 let transport = nodemailer.createTransport({
 	host: process.env.EMAILSMTP,
 	port: process.env.EMAILPORT,
-	service:'SendinBlue',
+	service:process.env.EMAILSERVICE,
 	auth: {
 		 user: process.env.EMAILID,
 		 pass: process.env.EMAILPASS
@@ -80,100 +87,117 @@ let transport = nodemailer.createTransport({
 });
 
 app.post('/', function(req, res){
-	var randomPingms = Math.floor(Math.random() * 50) + 50;
+	var randomPingms = Math.floor(Math.random() * 50) + Math.floor(Math.random() * 50);
 	res.status(200).send({ server: "running", status: 200, message: "server-running", ping: randomPingms })
 })
 
 app.post('/login', function(req, res){
-  User.findOne({ email: req.body.email }, function(error, result){
-    if(result){
-      console.log(bcrypt.compareSync(req.body.password, result.password));
-      if(bcrypt.compareSync(req.body.password, result.password)){
-        const existUser = result;
-        let token = jwt.sign({ result }, process.env.TOKENSECRET, {expiresIn: 604800});
-        console.log(token);
-				var issueUnix = Math.floor(Date.now() / 1000)
-				var expiryUnix = issueUnix + 604800;
-				var expiryUnixTime = expiryUnix * 1000;
-				var issuedUnixTime = issueUnix * 1000;
-				const issueDate = new Date(issuedUnixTime).toLocaleString();
-				const expiryDate = new Date(expiryUnixTime).toLocaleString();
-				console.log(issueUnix, expiryUnix);
-				const tokenMessage = {
-					 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-					 to: req.body.email,
-					 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-					 subject: 'New Token has Been Generated', // Subject line
-					 html: `<b>Glory to Heaven</b><p>New Login Token has been Generated.</p><p> Issue Date - ${issueDate}</p><p> Expiry Date - ${expiryDate}</p>` // Plain text body
-				};
-				// transport.sendMail(tokenMessage, function(error, info){
-				// 	if(error){
-				// 		console.log(error);
-				// 	} else {
-				// 		console.log(info);
-				// 	}
-				// })
-				const userData = {
-					email: existUser.email,
-					name: existUser.name,
-					admin: existUser.admin,
-					role: existUser.role,
-					superadmin: existUser.superadmin,
-					verified: existUser.verified,
+	PendingUser.findOne({ email: req.body.email, post: "User" }, function(error, result){
+		if(result){
+			console.log(result);
+			res.status(200).send({ auth: false, registered: true, token: null, message: "Your Email is Currently Pending Request. Please Wait till Accepting." });
+		} else {
+			SpamUser.findOne({ email: req.body.email }, function(error, result){
+				if(result){
+					res.status(200).send({ auth: false, registered: true, token: null, message: "You are Added to Spam List Due to Violation by a Admin. Contact Through Email for Support." });
+				} else {
+					User.findOne({ email: req.body.email }, function(error, result){
+						if(result){
+							console.log(bcrypt.compareSync(req.body.password, result.password));
+							if(bcrypt.compareSync(req.body.password, result.password)){
+								const existUser = result;
+								let token = jwt.sign({ result }, process.env.TOKENSECRET, {expiresIn: 604800});
+								console.log(token);
+								var issueUnix = Math.floor(Date.now() / 1000)
+								var expiryUnix = issueUnix + 604800;
+								var expiryUnixTime = expiryUnix * 1000;
+								var issuedUnixTime = issueUnix * 1000;
+								const issueDate = new Date(issuedUnixTime).toLocaleString();
+								const expiryDate = new Date(expiryUnixTime).toLocaleString();
+								console.log(issueUnix, expiryUnix);
+								const userData = {
+									email: existUser.email,
+									name: existUser.name,
+									admin: existUser.admin,
+									role: existUser.role,
+									superadmin: existUser.superadmin,
+									verified: existUser.verified,
+								}
+								res.status(200).send({ auth: true, registered: true, token: token, tokenuser:userData, issuedat: issueDate, expiryat: expiryDate });
+							} else {
+								res.status(200).send({ auth: false, registered: true, token: null, message: "User Password is Wrong" });
+							}
+						} else {
+							res.status(200).send({auth: false, registered: false, token: null, message: "User Not Found with this Email." });
+						}
+					})
 				}
-        res.status(200).send({ auth: true, registered: true, token: token, tokenuser:userData, issuedat: issueDate, expiryat: expiryDate });
-      } else {
-        res.status(200).send({ auth: false, registered: true, token: null, message: "User Password is Wrong" });
-      }
-    } else {
-      res.status(200).send({auth: false, registered: false, token: null, message: "User Not Found with this Email." });
-    }
-  })
+			})
+		}
+	})
 })
 
 app.post('/request', function(req, res){
-	User.findOne({ email: req.body.email }, function(error, result){
-		if(result){
-			res.status(200).send({auth: false, registered: false, message: "User already there with this Email." });
+	PendingUser.findOne({ email: req.body.email }, function(pendingError, pendingResult){
+		if(pendingResult){
+			res.status(200).send({auth: false, registered: false, message: "You Have Already Requested to Join. Please Wait While We Accept." });
 		} else {
-			PendingUser.findOne({ email: req.body.email }, function(error, result){
-				if(result){
-					res.status(200).send({auth: false, registered: false, message: "You are Already in Pending Users List. Please Be Patient. Your Request will be Processed." });
+			SpamUser.findOne({ email: req.body.email }, function(spamError, spamResult){
+				if(spamResult){
+					res.status(200).send({auth: false, registered: false, message: "You Already Have an Account and Also You are in our Spam List. Contact through Email to Login." });
 				} else {
-					User.find({ admin: true }, function(error, result){
-						let adminEmails = [];
-						result.forEach((admin, i) => {
-							adminEmails.push(admin.email)
-						});
-						const adminMessage = {
-							 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-							 to: adminEmails,
-							 replyTo: process.env.REPLYTOMAIL,
-							 subject: 'Glory to Heaven - Access Request', // Subject line
-							 html: `<p>The Following Person has Requested Access to Glory to Heaven Content.</p><p>If You Know him it is Well and Good, but Don't Accept Unwanted Request and Bloat the Website</p><b><u>Details:</u></b><p>Name: - <b>${req.body.name}</b></p><p>Email - <b>${req.body.email}</b></p><p>Message from Recipient - <b>${req.body.message}</b></p>Any Issues, Reply to this Mail, Our Super Admins will Contact You<p>` // Plain text body
-						};
-						const userMessage = {
-							 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-							 to: req.body.email,
-							 replyTo: process.env.REPLYTOMAIL,
-							 subject: 'Your Request is Pending Confirmation.', // Subject line
-							 html: `<p>Your Request is Pending Confirmation from Admins.</p><p>Till we Process the Data, Please be Patient.</p><p>On Confirmation You will get a Email regarding Confirmation and a OTP will be Sent to Activate your Account</b></p><p>You have to  Activate Your Account within 3 Hours of Confirmation Mail, Otherwise your Account will be deleted Automatically.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
-						};
-						transport.sendMail(adminMessage, function(error, info){
-							if(error){
-								console.log(error);
-							} else {
-								console.log(info);
-							}
-						})
-						transport.sendMail(userMessage, function(error, info){
-							if(error){
-								console.log(error);
-							} else {
-								console.log(info);
-							}
-						})
-						res.status(200).send({auth: true, registered: true, message: "Your Request has been Sent to our Admins for Processing" });
+					User.findOne({ email: req.body.email }, function(error, result){
+						if(result){
+							res.status(200).send({auth: false, registered: false, message: "User already Registered with this Email." });
+						} else {
+							User.find({ admin: true }, function(error, result){
+								let adminEmails = [];
+								result.forEach((admin, i) => {
+									adminEmails.push(admin.email)
+								});
+								const newPendingUser = new PendingUser({
+									name: req.body.name,
+									email:req.body.email,
+									post: "User",
+									message: req.body.message
+								});
+								newPendingUser.save(function(error, doc){
+									if(!error){
+										const adminMessage = {
+											 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+											 to: adminEmails,
+											 replyTo: process.env.REPLYTOMAIL,
+											 subject: 'Glory to Heaven - Access Request', // Subject line
+											 html: `<p>The Following Person has Requested Access to Glory to Heaven Content.</p><p>If You Know him it is Well and Good, but Don't Accept Unwanted Request and Bloat the Website</p><b><u>Details:</u></b><p>Name: - <b>${req.body.name}</b></p><p>Email - <b>${req.body.email}</b></p><p>Message from Recipient - <b>${req.body.message}</b></p>Any Issues, Reply to this Mail, Our Super Admins will Contact You<p>` // Plain text body
+										};
+										const userMessage = {
+											 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+											 to: req.body.email,
+											 replyTo: process.env.REPLYTOMAIL,
+											 subject: 'Your Request is Pending Confirmation.', // Subject line
+											 html: `<p>Your Request is Pending Confirmation from Admins.</p><p>Till we Process the Data, Please be Patient.</p><p>On Confirmation You will get a Email regarding Confirmation and a OTP will be Sent to Activate your Account</b></p><p>You have to  Activate Your Account within 3 Hours of Confirmation Mail, Otherwise your Account will be deleted Automatically.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+										};
+										transport.sendMail(adminMessage, function(error, info){
+											if(error){
+												console.log(error);
+											} else {
+												console.log(info);
+											}
+										})
+										transport.sendMail(userMessage, function(error, info){
+											if(error){
+												console.log(error);
+											} else {
+												console.log(info);
+											}
+										})
+										res.status(200).send({auth: true, registered: true, message: "Your Request has been Sent to our Admins for Processing" });
+									} else {
+										res.status(200).send({auth: false, registered: true, message: "Ther's an Error Processing Your Request. Please Try Again Later." });
+									}
+								})
+							})
+						}
 					})
 				}
 			})
@@ -186,140 +210,189 @@ app.post('/register-newuser', function(req, res){
 		if(result){
 				if(result.admin){
 					if(bcrypt.compareSync(req.body.adminpass, result.password)){
-						User.findOne({ email: req.body.email }, function(error, result){
-							if(result){
-								res.status(200).send({ auth: false, registered: true, message: "User Already Exists with this Email" });
-							} else if(!result) {
-								var temporaryPass = randomstring.generate({ length: 8, charset: 'alphanumeric' });
-								const newUser = new User({
-									name: req.body.name,
-									email: req.body.email,
-									temppassword: bcrypt.hashSync(temporaryPass, 10),
-									role: "User",
-									admin: false,
-									superadmin: false,
-									verified: false,
-								})
-								 console.log(newUser)
-								 newUser.save(function(error, doc){
-									 if(!error){
-									 	const message = {
-									     from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-									     to: req.body.email,
-											 replyTo: process.env.REPLYTOMAIL,
-									     subject: 'We Have Accepted Your Request.', // Subject line
-									     html: `<b>As Per Your Request We have Registered you in Our Website</b><p>Now You can Login with Your Email</p><p>Here is Your One Time Password - <b>${temporaryPass}</b></p><p>One Time Password is Valid for only 3 Hours</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
-									 	};
-									 	transport.sendMail(message, function(err, info) {
-									 	    if (err) {
-													User.deleteOne({ email: req.body.email}, function(error){
-														if(error){
-															console.log(error);
-														} else {
-															const adminMessage = {
-														     from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-														     to: req.body.adminuseremail,
-																 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-														     subject: 'Don\'t Add Spam users', // Subject line
-														     html: `<b>The Recipient You added now is a Spam.</b><p>You have been Restricted from Registering new Users for one Day.</p><p>If you think this the Recipient is Not a Spam Email, Reply to this mail to Remove redtriction on your Account</p>` // Plain text body
-														 	};
-															console.log(adminMessage);
-															User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: true } }, function(error){
-																if(error){
-																	console.log(error);
-																} else {
-																	setTimeout(() => {
-																		User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: false } }, function(error){
-																			if(error){
-																				console.log(error);
-																			} else {
-																				console.log('Updated back')
-																			}
-																		})
-																	}, 86400000);
-																}
-															});
-															transport.sendMail(adminMessage, function(error, info){
-																if(error){
-																	console.log(error);
-																} else {
-																	console.log(error);
-																}
-															})
-															res.status(200).send({ auth: false, registered: false, message: "It Looks like the Recipient Mail is Spam." })
-														}
-													});
-									 	    } else {
-													setTimeout(() => {
-														User.findOne({ email: req.body.email }, function(error, result){
-															if(!result){
-																console.log(error);
-															} else if(result){
-																var tempPassIsThere = result.temppassword != null ? true : false;
-																var passNotThere = result.password == null ? true : false;
-																if(tempPassIsThere && passNotThere){
-																	User.deleteOne({ email: req.body.email }, function(error){
+						PendingUser.findOne({ email: req.body.email }, function(pendingUser, pendingResult){
+							if(pendingResult){
+								User.findOne({ email: req.body.email }, function(error, result){
+									if(result){
+										res.status(200).send({ auth: false, registered: true, message: "User Already Exists with this Email" });
+									} else if(!result) {
+										var temporaryPass = randomstring.generate({ length: 8, charset: 'alphanumeric' });
+										const newUser = new User({
+											name: req.body.name,
+											email: req.body.email,
+											temppassword: bcrypt.hashSync(temporaryPass, 10),
+											role: "User",
+											admin: false,
+											superadmin: false,
+											verified: false,
+										})
+										 newUser.save(function(error, doc){
+											 if(!error){
+											 	const message = {
+											     from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+											     to: req.body.email,
+													 replyTo: process.env.REPLYTOMAIL,
+											     subject: 'We Have Accepted Your Request.', // Subject line
+											     html: `<b>As Per Your Request We have Registered you in Our Website</b><p>Now You can Login with Your Email</p><p>Here is Your One Time Password - <b>${temporaryPass}</b></p><p>One Time Password is Valid for only 3 Hours</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+											 	};
+												PendingUser.deleteOne({ email: req.body.mail }, function(pendingError){
+													if(!pendingError){
+														transport.sendMail(message, function(err, info) {
+																if (err) {
+																	User.deleteOne({ email: req.body.email}, function(error){
 																		if(error){
-																			res.send(error);
 																			console.log(error);
 																		} else {
+																			SpamUser.findOne({ email: req.body.email }, function(spamError, spamResult){
+																				if(spamResult){
+																					console.log(spamResult);
+																				} else {
+																					const newSpamUser = new SpamUser({
+																						name: req.body.name,
+																						email: req.body.email,
+																						reason: "His Email Looks Like a Spam",
+																						flaggedby: req.body.adminuseremail
+																					})
+																					newSpamUser.save(function(error, doc){
+																						if(!error){
+																							console.log(error)
+																						} else {
+																							console.log(error);
+																						}
+																					})
+																				}
+																			});
+																			const adminMessage = {
+																				 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+																				 to: req.body.adminuseremail,
+																				 replyTo: process.env.REPLYTOMAIL,         // List of recipients
+																				 subject: 'Don\'t Add Spam users', // Subject line
+																				 html: `<b>The Recipient You added now is a Spam.</b><p>You have been Restricted from Registering new Users for one Day.</p><p>If you think this the Recipient is Not a Spam Email, Reply to this mail to Remove redtriction on your Account</p>` // Plain text body
+																			};
+																			console.log(adminMessage);
 																			User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: true } }, function(error){
 																				if(error){
 																					console.log(error);
 																				} else {
-																					const adminrestricMessage = {
-																						 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-																						 to: req.body.adminuseremail,
-																						 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-																						 subject: 'Don\'t Add Spam users', // Subject line
-																						 html: `<p>Don't Use Your Admin Powers to Spam this Website, the User - ${req.body.email} is a Spam, Since he Didn't Signup in the Website with OTP. You have been Blocked from Adding new Users for One Day</p><p>If you think this the Recipient is Not a Spam Email, Reply to this mail to Remove restriction on your Account</p>` // Plain text body
-																					};
-																					transport.sendMail(adminrestricMessage, function(err, info){
-																						if(err){
-																							console.log(err);
-																						} else {
-																							console.log(info);
-																						}
-																					});
 																					setTimeout(() => {
 																						User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: false } }, function(error){
 																							if(error){
 																								console.log(error);
 																							} else {
-																								console.log('updated back')
+																								console.log('Updated back')
 																							}
 																						})
 																					}, 86400000);
 																				}
-																			})
-																			const deleteMessage = {
-																				 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-																				 to: req.body.email,
-																				 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-																				 subject: 'Deletion of Your Account.', // Subject line
-																				 html: `<p>Your Account has been Deleted Automatically, Since You didn't Use the Sent One Time Password</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
-																			};
-																			transport.sendMail(deleteMessage, function(err, info){
-																				if(err){
-																					console.log(err);
+																			});
+																			transport.sendMail(adminMessage, function(error, info){
+																				if(error){
+																					console.log(error);
 																				} else {
-																					console.log(info);
+																					console.log(error);
 																				}
 																			})
+																			res.status(200).send({ auth: false, registered: false, message: "It Looks like the Recipient Mail is Spam." })
 																		}
-																	})
+																	});
+																} else {
+																	setTimeout(() => {
+																		User.findOne({ email: req.body.email }, function(error, result){
+																			if(!result){
+																				console.log(error);
+																			} else if(result){
+																				var tempPassIsThere = result.temppassword != null ? true : false;
+																				var passNotThere = result.password == null ? true : false;
+																				if(tempPassIsThere && passNotThere){
+																					User.deleteOne({ email: req.body.email }, function(error){
+																						if(error){
+																							res.send(error);
+																							console.log(error);
+																						} else {
+																							SpamUser.findOne({ email: req.body.email }, function(spamError, spamResult){
+																								if(spamResult){
+																									console.log(spamResult);
+																								} else {
+																									const newSpamUser = new SpamUser({
+																										name: req.body.name,
+																										email: req.body.email,
+																										reason: "His Email Looks Like a Spam",
+																										flaggedby: req.body.adminuseremail
+																									})
+																									newSpamUser.save(function(error, doc){
+																										if(!error){
+																											console.log(error)
+																										} else {
+																											console.log(error);
+																										}
+																									})
+																								}
+																							});
+																							User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: true } }, function(error){
+																								if(error){
+																									console.log(error);
+																								} else {
+																									const adminrestricMessage = {
+																										 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+																										 to: req.body.adminuseremail,
+																										 replyTo: process.env.REPLYTOMAIL,         // List of recipients
+																										 subject: 'Don\'t Add Spam users', // Subject line
+																										 html: `<p>Don't Use Your Admin Powers to Spam this Website, the User - ${req.body.email} is a Spam, Since he Didn't Signup in the Website with OTP. You have been Blocked from Adding new Users for One Day</p><p>If you think this the Recipient is Not a Spam Email, Reply to this mail to Remove restriction on your Account</p>` // Plain text body
+																									};
+																									transport.sendMail(adminrestricMessage, function(err, info){
+																										if(err){
+																											console.log(err);
+																										} else {
+																											console.log(info);
+																										}
+																									});
+																									setTimeout(() => {
+																										User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: false } }, function(error){
+																											if(error){
+																												console.log(error);
+																											} else {
+																												console.log('updated back')
+																											}
+																										})
+																									}, 86400000);
+																								}
+																							})
+																							const deleteMessage = {
+																								 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+																								 to: req.body.email,
+																								 replyTo: process.env.REPLYTOMAIL,         // List of recipients
+																								 subject: 'Deletion of Your Account.', // Subject line
+																								 html: `<p>Your Account has been Deleted Automatically, Since You didn't Use the Sent One Time Password</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+																							};
+																							transport.sendMail(deleteMessage, function(err, info){
+																								if(err){
+																									console.log(err);
+																								} else {
+																									console.log(info);
+																								}
+																							})
+																						}
+																					})
+																				}
+																			}
+																		})
+																	}, 10800000);
+																	res.status(200).send({ auth: true, registered: true, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 3 hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
 																}
-															}
-														})
-													}, 10800000);
-									 	      res.status(200).send({ auth: true, registered: true, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 3 hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
-									 	    }
-									 	});
-									 } else {
-										 res.status(200).send({ auth: true, registered: false, message: "Error Saving User" });
-										 console.log(error);
-									 }
-								 });
+														});
+													} else {
+														res.status(200).send({ auth: true, registered: false, message: 'Error While Moving User Database Record. Please Try Again Later.' })
+													}
+												})
+											 } else {
+												 res.status(200).send({ auth: true, registered: false, message: "Error Saving User" });
+												 console.log(error);
+											 }
+										 });
+									}
+								})
+							} else {
+								res.status(200).send({ auth: false, registered: true, message: "A User has to Request in Order for Being Added. This is To Ensure that a User is a Human and Not a Spam Bot. Also to Control Admins Adding Multiple Users." });
 							}
 						})
 					} else {
@@ -334,389 +407,133 @@ app.post('/register-newuser', function(req, res){
 	})
 });
 
-app.post('/register-admin', function(req, res){
+app.post('/spamuser', function(req, res){
 	User.findOne({ email: req.body.adminuseremail }, function(error, result){
 		if(result){
-			if(result.admin && result.superadmin){
+			if(result.admin){
 				if(bcrypt.compareSync(req.body.adminpass, result.password)){
 					User.findOne({ email: req.body.email }, function(error, result){
 						if(result){
-							res.status(200).send({ auth: false, registered: true, message: "User Already Exists with this Email. Try Converting Existing user to Admin/Super Admin" });
-						} else {
-							var temporaryPass = randomstring.generate({ length: 8, charset: 'alphanumeric' });
-							const newUser = new User({
-								name: req.body.name,
-								email: req.body.email,
-								temppassword: bcrypt.hashSync(temporaryPass, 10),
-								role: "Admin",
-								admin: true,
-								superadmin: false,
-								verified: false,
+							const spamUser = new SpamUser({
+								name: result.name,
+								email: result.email,
+								flaggedby: req.body.adminuseremail,
+								message: req.body.message
 							})
-							console.log(newUser)
-							newUser.save(function(error, doc){
-								if(!error){
-									const message = {
-										from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-										to: req.body.email,
-										bcc: process.env.ADMINEMAIL,
-										replyTo: process.env.REPLYTOMAIL,
-										subject: 'You have been Appointed as Admin', // Subject line
-										html: `<b>As Per Your Request We have Registered you in Our Website as a Admin</b><p>Now You can Login with Your Email</p><p>Here is Your One Time Password - <b>${temporaryPass}</b></p><p>Note: One Time Password is Valid for only 3 Hours</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
-									}
-									transport.sendMail(message, function(err, info) {
-											if (err) {
-												User.deleteOne({ email: req.body.email}, function(error){
-													if(error){
-														console.log(error);
-													} else {
-														const adminMessage = {
-															 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-															 to: req.body.adminuseremail,
-															 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-															 subject: 'Don\'t Add Spam users', // Subject line
-															 html: `<b>The Recipient You added now is a Spam.</b><p>You have been Restricted from Registering new Users for one Day.</p><p>If you think this the Recipient is Not a Spam Email, Reply to this mail to Remove redtriction on your Account</p>` // Plain text body
-														};
-														console.log(adminMessage);
-														User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: true } }, function(error){
-															if(error){
-																console.log(error);
-															} else {
-																setTimeout(() => {
-																	User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: false } }, function(error){
-																		if(error){
-																			console.log(error);
-																		} else {
-																			console.log('Updated back')
-																		}
-																	})
-																}, 86400000);
-															}
-														});
-														transport.sendMail(adminMessage, function(error, info){
-															if(error){
-																console.log(error);
-															} else {
-																console.log(info);
-															}
-														})
-														res.status(200).send({ auth: false, registered: false, message: "It Looks like the Recipient Mail is Spam." })
-													}
-												});
-											} else {
-												setTimeout(() => {
-													User.findOne({ email: req.body.email }, function(error, result){
-														if(!result){
-															console.log(error);
-														} else if(result){
-															var tempPassIsThere = result.temppassword != null ? true : false;
-															var passNotThere = result.password == null ? true : false;
-															if(tempPassIsThere && passNotThere){
-																User.deleteOne({ email: req.body.email }, function(error){
-																	if(error){
-																		res.send(error);
-																		console.log(error);
-																	} else {
-																		User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: true } }, function(error){
-																			if(error){
-																				console.log(error);
-																			} else {
-																				const adminrestricMessage = {
-																					 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-																					 to: req.body.adminuseremail,
-																					 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-																					 subject: 'Don\'t Add Spam users', // Subject line
-																					 html: `<p>Don't Use Your Admin Powers to Spam this Website, the User - ${req.body.email} is a Spam, Since he Didn't Signup in the Website with OTP. You have been Blocked from Adding new Users for One Day</p><p>If you think this the Recipient is Not a Spam Email, Reply to this mail to Remove restriction on your Account</p>` // Plain text body
-																				};
-																				transport.sendMail(adminrestricMessage, function(err, info){
-																					if(err){
-																						console.log(err);
-																					} else {
-																						console.log(info);
-																					}
-																				});
-																				setTimeout(() => {
-																					User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: false } }, function(error){
-																						if(error){
-																							console.log(error);
-																						} else {
-																							console.log('updated back')
-																						}
-																					})
-																				}, 86400000);
-																			}
-																		})
-																		const deleteMessage = {
-																			 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-																			 to: req.body.email,
-																			 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-																			 subject: 'Deletion of Your Account.', // Subject line
-																			 html: `<p>Your Account has been Deleted Automatically, Since You didn't Use the Sent One Time Password</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
-																		};
-																		transport.sendMail(deleteMessage, function(err, info){
-																			if(err){
-																				console.log(err);
-																			} else {
-																				console.log(info);
-																			}
-																		})
-																	}
-																})
-															}
-														}
-													})
-												}, 10800000);
-												res.status(200).send({ auth: true, registered: true, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 3 Hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
-											}
-									});
+							spamUser.save(function(error, doc){
+								if(error){
+									res.status(200).send({ auth: true, registered: false, message: "Error Processing Request. Try Again Later" });
 								} else {
-									res.status(200).send({ auth: false, registered: false, message: "Error Saving User" });
-									console.log(error);
+									const message = {
+										 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+										 to: req.body.email,
+										 replyTo: process.env.REPLYTOMAIL,
+										 subject: 'You Have Been Flagged', // Subject line
+										 html: `<p>You Have been Flagged by Admin - ${req.body.adminuseremail} for the Reason - ${req.body.message}.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+									};
+									transport.sendMail(message, function(err, info){
+										if(err){
+											console.log(err);
+										} else {
+											console.log(info);
+										}
+									})
+									res.status(200).send({ auth: true, registered: true, message: 'User has Been Added to Spam User Database.'});
 								}
 							})
+						} else {
+							res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
 						}
 					})
 				} else {
-					res.status(200).send({ auth: false, registered: false, message: "Admin Password Wrong" })
+					res.status(200).send({ auth: false, registered: true, message: "Your Admin Password does Not Match with our Records" })
 				}
 			} else {
-				res.status(200).send({ auth: false, registered: false, message: "You are Not Authorized to Register Admin Users" })
+				res.status(200).send({ auth: false, registered: true, message: "You are Unauthorized" })
 			}
 		} else {
 			res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
 		}
 	})
-});
+})
 
-app.post('/register-superadmin', function(req, res){
+app.post('/spamadmin', function(req, res){
 	User.findOne({ email: req.body.adminuseremail }, function(error, result){
 		if(result){
-			if(result.admin && result.superadmin){
-				if(bcrypt.compareSync(req.body.adminpass, result.password)){
-					User.findOne({ email: req.body.email }, function(error, result){
-						if(result){
-							res.status(200).send({ auth: false, registered: true, message: "User Already Exists with this Email. Try Converting Existing user to Admin/Super Admin" });
-						} else {
-							var temporaryPass = randomstring.generate({ length: 8, charset: 'alphanumeric' });
-							const newUser = new User({
-								name: req.body.name,
-								email: req.body.email,
-								temppassword: bcrypt.hashSync(temporaryPass, 10),
-								role: "Super Admin",
-								admin: true,
-								superadmin: true,
-								verified: true,
-							})
-							console.log(newUser)
-							newUser.save(function(error, doc){
-								if(!error){
-									const message = {
-										from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-										to: req.body.email,
-										replyTo: process.env.REPLYTOMAIL,
-										subject: 'You have been Appointed as Super Admin', // Subject line
-										html: `<b>As Per Your Request We have Registered you in Our Website as a Admin</b><p>Now You can Login with Your Email</p><p>Here is Your One Time Password - <b>${temporaryPass}</b></p><p>Note: One Time Password is Valid for only 3 Hours</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
-									}
-									transport.sendMail(message, function(err, info) {
-											if (err) {
-												User.deleteOne({ email: req.body.email}, function(error){
-													if(error){
-														console.log(error);
-													} else {
-														const adminMessage = {
-															 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-															 to: req.body.adminuseremail,
-															 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-															 subject: 'Don\'t Add Spam users', // Subject line
-															 html: `<b>The Recipient You added now is a Spam.</b><p>You have been Restricted from Registering new Users for one Day.</p><p>If you think this the Recipient is Not a Spam Email, Reply to this mail to Remove redtriction on your Account</p>` // Plain text body
-														};
-														console.log(adminMessage);
-														User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: true } }, function(error){
-															if(error){
-																console.log(error);
-															} else {
-																setTimeout(() => {
-																	User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: false } }, function(error){
-																		if(error){
-																			console.log(error);
-																		} else {
-																			console.log('Updated back')
-																		}
-																	})
-																}, 86400000);
-															}
-														});
-														transport.sendMail(adminMessage, function(error, info){
-															if(error){
-																console.log(error);
-															} else {
-																console.log(info);
-															}
-														})
-														res.status(200).send({ auth: false, registered: false, message: "It Looks like the Recipient Mail is Spam." })
-													}
-												});
-											} else {
-												setTimeout(() => {
-													User.findOne({ email: req.body.email }, function(error, result){
-														if(!result){
-															console.log(error);
-														} else if(result){
-															var tempPassIsThere = result.temppassword != null ? true : false;
-															var passNotThere = result.password == null ? true : false;
-															if(tempPassIsThere && passNotThere){
-																User.deleteOne({ email: req.body.email }, function(error){
-																	if(error){
-																		res.send(error);
-																		console.log(error);
-																	} else {
-																		User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: true } }, function(error){
-																			if(error){
-																				console.log(error);
-																			} else {
-																				const adminrestricMessage = {
-																					 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-																					 to: req.body.adminuseremail,
-																					 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-																					 subject: 'Don\'t Add Spam users', // Subject line
-																					 html: `<p>Don't Use Your Admin Powers to Spam this Website, the User - ${req.body.email} is a Spam, Since he Didn't Signup in the Website with OTP. You have been Blocked from Adding new Users for One Day</p><p>If you think this the Recipient is Not a Spam Email, Reply to this mail to Remove restriction on your Account</p>` // Plain text body
-																				};
-																				transport.sendMail(adminrestricMessage, function(err, info){
-																					if(err){
-																						console.log(err);
-																					} else {
-																						console.log(info);
-																					}
-																				});
-																				setTimeout(() => {
-																					User.updateOne({ email: req.body.adminuseremail }, { $set: { temprestricted: false } }, function(error){
-																						if(error){
-																							console.log(error);
-																						} else {
-																							console.log('updated back')
-																						}
-																					})
-																				}, 86400000);
-																			}
-																		})
-																		const deleteMessage = {
-																			 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-																			 to: req.body.email,
-																			 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-																			 subject: 'Deletion of Your Account.', // Subject line
-																			 html: `<p>Your Account has been Deleted Automatically, Since You didn't Use the Sent One Time Password</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
-																		};
-																		transport.sendMail(deleteMessage, function(err, info){
-																			if(err){
-																				console.log(err);
-																			} else {
-																				console.log(info);
-																			}
-																		})
-																	}
-																})
-															}
-														}
-													})
-												}, 10800000);
-												res.status(200).send({ auth: true, registered: true, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 3 Hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
-											}
-									});
-								} else {
-									res.status(200).send({ auth: false, registered: false, message: "Error Saving Password" });
-									console.log(error);
-								}
-							})
-						}
-					})
-				} else {
-					res.status(200).send({ auth: false, registered: false, message: "Paswords Do not Match with Our Records" })
-				}
-			} else {
-				res.status(200).send({ auth: false, registered: false, message: "You are Not Authorized to Register Super Admin Users" })
-			}
-		} else {
-			res.status(200).send({ auth: false, registered: false, message: "You are Not Authorized to Register Super Admin Users" })
-		}
-	})
-});
-
-app.post('/adminperms', function(req, res){
-	User.findOne({ email: req.body.adminuseremail }, function(error, result){
-		if(result){
-			if(result.admin && result.superadmin){
-				if(bcrypt.compareSync(req.body.adminpass, result.password)){
-					User.findOne({ email: req.body.email }, function(error, result){
-						if(result){
-							if(result.superadmin){
-								res.status(200).send({ auth: true, changed: false, message: "User is Already a Super Admin" });
-							} else if(result.admin) {
-								res.status(200).send({ auth: true, changed: false, message: "User is Already a Admin" });
-							} else {
-								User.updateOne({ email: req.body.email }, { $set: { admin: true, role: "Admin" } }, function(error){
-									if(!error){
-										const promoteMessage = {
+			if(result.admin){
+				if(result.superadmin){
+					if(bcrypt.compareSync(req.body.adminpass, result.password)){
+						User.findOne({ email: req.body.email }, function(error, result){
+							if(result){
+								const spamUser = new SpamUser({
+									name: result.name,
+									email: result.email,
+									flaggedby: req.body.adminuseremail,
+									message: req.body.message
+								})
+								spamUser.save(function(error, doc){
+									if(error){
+										res.status(200).send({ auth: true, registered: false, message: "Error Processing Request. Try Again Later" });
+									} else {
+										const message = {
 											 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
 											 to: req.body.email,
-											 bcc: req.body.ADMINEMAIL,
-											 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-											 subject: 'Account Promoted to Admin Status.', // Subject line
-											 html: `<p>Your Account has been Promoted to Admin by Super Admin - ${req.body.adminuseremail}, Please Use your Admin Powers Wisely.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+											 replyTo: process.env.REPLYTOMAIL,
+											 subject: 'You Have Been Flagged', // Subject line
+											 html: `<p>You Have been Flagged by Admin - ${req.body.adminuseremail} for the Reason - ${req.body.message}.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
 										};
-										transport.sendMail(promoteMessage, function(error, info){
-											if(error){
-												console.log(error);
+										transport.sendMail(message, function(err, info){
+											if(err){
+												console.log(err);
 											} else {
 												console.log(info);
 											}
 										})
-										res.status(200).send({ auth: true, registered: true, changed: true, message: "User has been Promoted to Super Admin" });
-									} else {
-											res.status(200).send({ auth: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
+										res.status(200).send({ auth: true, registered: true, message: 'Admin has Been Added to Spam User Database.'});
 									}
 								})
+							} else {
+								res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
 							}
-						} else {
-							res.status(200).send({ auth: true, registered: true, changed: false, message: "No User Found with this Email" });
-						}
-					});
+						})
+					} else {
+						res.status(200).send({ auth: false, registered: true, message: "Your Admin Password does Not Match with our Records" })
+					}
 				} else {
-					res.status(200).send({ auth: false, registered: true, changed: false, message: "Your Admin Password is Wrong" });
+					res.status(200).send({ auth: false, registered: true, message: "You are Unauthorized" })
 				}
 			} else {
-				res.status(200).send({ auth: false, registered: false, changed: false, message: "You are Unauthorized" });
+				res.status(200).send({ auth: false, registered: true, message: "You are Unauthorized" })
 			}
 		} else {
-			res.status(200).send({ auth: false, registered: false, changed: false, message: "BAD REQUEST" });
+			res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
 		}
 	})
-});
+})
 
-app.post('/superadminperms', function(req, res){
-	User.findOne({ email: req.body.adminuseremail }, function(error, result){
+app.post('/adminperms', function(req, res){
+	PendingUser.findOne({ email: req.body.email, post: "Admin" }, function(error, result){
 		if(result){
-			if(result.admin && result.superadmin){
-				if(bcrypt.compareSync(req.body.adminpass, result.password)){
-					if(result.temprestricted){
-						res.status(200).send({ auth: false, registered: true, changed: false, message: "You Have been Temporarily Restricted from Modifying Permissions of Users." });
-					} else {
-						User.findOne({ email: req.body.email }, function(error, result){
-							if(result){
-								if(result.admin){
+			User.findOne({ email: req.body.adminuseremail }, function(error, result){
+				if(result){
+					if(result.admin && result.superadmin){
+						if(bcrypt.compareSync(req.body.adminpass, result.password)){
+							User.findOne({ email: req.body.email }, function(error, result){
+								if(result){
 									if(result.superadmin){
-										res.status(200).send({ auth: true, registered: true, changed: false, message: "User is already a Super Admin" });
+										res.status(200).send({ auth: true, changed: false, message: "User is Already a Super Admin" });
+									} else if(result.admin) {
+										res.status(200).send({ auth: true, changed: false, message: "User is Already a Admin" });
 									} else {
-										User.updateOne({ email: req.body.email }, { $set: { superadmin: true, role: "Super Admin" } }, function(error){
-											if(error){
-												res.status(200).send({ auth: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
-											} else {
+										User.updateOne({ email: req.body.email }, { $set: { admin: true, role: "Admin" } }, function(error){
+											if(!error){
 												const promoteMessage = {
 													 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
 													 to: req.body.email,
 													 bcc: req.body.ADMINEMAIL,
 													 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-													 subject: 'Account Promoted to Super Admin Status.', // Subject line
-													 html: `<p>Your Account has been Promoted to Super Admin by Super Admin - ${req.body.adminuseremail}, Please Use your Super Admin Powers Wisely.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+													 subject: 'Account Promoted to Admin Status.', // Subject line
+													 html: `<p>Your Account has been Promoted to Admin by Super Admin - ${req.body.adminuseremail}, Please Use your Admin Powers Wisely.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
 												};
 												transport.sendMail(promoteMessage, function(error, info){
 													if(error){
@@ -725,26 +542,243 @@ app.post('/superadminperms', function(req, res){
 														console.log(info);
 													}
 												})
-												res.status(200).send({ auth: true, registered: true, changed: true, message: "User has been Promoted to Admin" });
+												PendingUser.deleteOne({ email: req.body.email, post: "Admin" }, function(error){
+													if(error){
+														console.log(error)
+													} else {
+														res.status(200).send({ auth: true, registered: true, changed: true, message: "User has been Promoted to Admin" });
+													}
+												})
+											} else {
+													res.status(200).send({ auth: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
 											}
 										})
 									}
 								} else {
-									res.status(200).send({ auth: true, registered: true, changed: false, message: "User Should be a Admin to be Promoted to Super Admin" });
+									res.status(200).send({ auth: true, registered: true, changed: false, message: "No User Found with this Email" });
 								}
-							} else {
-								res.status(200).send({ auth: true, registered: false, changed: false, message: "No User Found with this Email" });
-							}
-						})
+							});
+						} else {
+							res.status(200).send({ auth: false, registered: true, changed: false, message: "Your Admin Password is Wrong" });
+						}
+					} else {
+						res.status(200).send({ auth: false, registered: false, changed: false, message: "You are Unauthorized" });
 					}
 				} else {
-					res.status(200).send({ auth: false, registered: true, changed: false, message: "Your Admin Password is Wrong" });
+					res.status(200).send({ auth: false, registered: false, changed: false, message: "BAD REQUEST" });
 				}
-			} else {
-				res.status(200).send({ auth: false, registered: false, changed: false, message: "You are Unauthorized" });
-			}
+			})
 		} else {
-			res.status(200).send({ auth: false, token: false, registered: false, changed: false, message: "BAD REQUEST" });
+			res.status(200).send({ auth: true, changed: false, message: "A User has to Specifically Request to Become a Admin to Promote Him. This is to Ensure Participation from Both Sides." });
+		}
+	})
+});
+
+app.post('/superadminperms', function(req, res){
+	PendingUser.findOne({ email: req.body.email, post: "SuperAdmin" }, function(error, result){
+		if(result){
+			User.findOne({ email: req.body.adminuseremail }, function(error, result){
+				if(result){
+					if(result.admin && result.superadmin){
+						if(bcrypt.compareSync(req.body.adminpass, result.password)){
+							if(result.temprestricted){
+								res.status(200).send({ auth: false, registered: true, changed: false, message: "You Have been Temporarily Restricted from Modifying Permissions of Users." });
+							} else {
+								User.findOne({ email: req.body.email }, function(error, result){
+									if(result){
+										if(result.admin){
+											if(result.superadmin){
+												res.status(200).send({ auth: true, registered: true, changed: false, message: "User is already a Super Admin" });
+											} else {
+												User.updateOne({ email: req.body.email }, { $set: { superadmin: true, role: "Super Admin" } }, function(error){
+													if(error){
+														res.status(200).send({ auth: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
+													} else {
+														const promoteMessage = {
+															 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+															 to: req.body.email,
+															 bcc: req.body.ADMINEMAIL,
+															 replyTo: process.env.REPLYTOMAIL,         // List of recipients
+															 subject: 'Account Promoted to Super Admin Status.', // Subject line
+															 html: `<p>Your Account has been Promoted to Super Admin by Super Admin - ${req.body.adminuseremail}, Please Use your Super Admin Powers Wisely.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+														};
+														transport.sendMail(promoteMessage, function(error, info){
+															if(error){
+																console.log(error);
+															} else {
+																console.log(info);
+															}
+														});
+														PendingUser.deleteOne({ email: req.body.email, post: "SuperAdmin" }, function(error){
+															if(error){
+																console.log(error)
+															} else {
+																res.status(200).send({ auth: true, registered: true, changed: true, message: "User has been Promoted to Super Admin" });
+															}
+														})
+													}
+												})
+											}
+										} else {
+											res.status(200).send({ auth: true, registered: true, changed: false, message: "User Should be a Admin to be Promoted to Super Admin" });
+										}
+									} else {
+										res.status(200).send({ auth: true, registered: false, changed: false, message: "No User Found with this Email" });
+									}
+								})
+							}
+						} else {
+							res.status(200).send({ auth: false, registered: true, changed: false, message: "Your Admin Password is Wrong" });
+						}
+					} else {
+						res.status(200).send({ auth: false, registered: false, changed: false, message: "You are Unauthorized" });
+					}
+				} else {
+					res.status(200).send({ auth: false, token: false, registered: false, changed: false, message: "BAD REQUEST" });
+				}
+			})
+		} else {
+			res.status(200).send({ auth: true, changed: false, message: "A User has to Specifically Request to Become a Super Admin to Promote Him. This is to Ensure Participation from Both Sides." });
+		}
+	})
+})
+
+app.post('/requestadmin', function(req, res){
+	PendingUser.findOne({ email: req.body.email, post: "Admin" }, function(error, result){
+		if(result){
+			res.status(200).send({ auth: true, changed: false, message: "You are Allowed to Request only One Time.Please Wait" });
+		} else {
+			User.findOne({ email: req.body.email }, function(error, result){
+				if(result){
+					if(result.superadmin){
+						res.status(200).send({ auth: true, changed: false, message: "You are a Already a Super Admin" });
+					} else {
+						if(result.admin){
+							res.status(200).send({ auth: true, changed: false, message: "You are Already an Admin." });
+						} else {
+							User.find({ superadmin: true }, function(error, result){
+								let adminEmails = [];
+								result.forEach((admin, i) => {
+									adminEmails.push(admin.email)
+								});
+								const newPendingUser = new PendingUser({
+									name: req.body.name,
+									email: req.body.email,
+									post: "Admin",
+									message: req.body.message
+								})
+								newPendingUser.save(function(error, doc){
+									if(error){
+										res.status(200).send({ auth: true, changed: false, message: "Error Sending Your Request." });
+									} else {
+										const adminMessage = {
+											 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+											 to: adminEmails,
+											 replyTo: process.env.REPLYTOMAIL,
+											 subject: 'Glory to Heaven - Admin Request', // Subject line
+											 html: `<p>The Following Person has Requested Admin Previlage to Glory to Heaven.</p><b><u>Details:</u></b><p>Name: - <b>${req.body.name}</b></p><p>Email - <b>${req.body.email}</b></p><p>Message from Recipient - <b>${req.body.message}</b></p>Any Issues, Reply to this Mail, Our Super Admins will Contact You<p>` // Plain text body
+										};
+										const userMessage = {
+											 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+											 to: req.body.email,
+											 replyTo: process.env.REPLYTOMAIL,
+											 subject: 'Your Request is Pending Confirmation.', // Subject line
+											 html: `<p>Your Request is Pending Confirmation from Admins.</p><p>Till we Process the Data, Please be Patient.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+										};
+										transport.sendMail(adminMessage, function(error, info){
+											if(error){
+												console.log(error);
+											} else {
+												console.log(info);
+											}
+										})
+										transport.sendMail(userMessage, function(error, info){
+											if(error){
+												console.log(error);
+											} else {
+												console.log(info);
+											}
+										})
+										res.status(200).send({auth: true, registered: true, message: "Your Request has been Sent to our Admins for Processing" });
+									}
+								})
+							})
+						}
+					}
+				} else {
+					res.status(200).send({ auth: true, changed: false, message: "BAD REQUEST" });
+				}
+			})
+		}
+	})
+})
+
+app.post('/requestsuperadmin', function(req, res){
+	PendingUser.findOne({ email: req.body.email, post: "SuperAdmin" }, function(error, result){
+		if(result){
+			res.status(200).send({ auth: true, changed: false, message: "You are Allowed to Request only One Time.Please Wait" });
+		} else {
+			User.findOne({ email: req.body.email }, function(error, result){
+				if(result){
+					if(result.superadmin){
+						res.status(200).send({ auth: true, changed: false, message: "You are a Already a Super Admin" });
+					} else {
+						if(result.admin){
+							User.find({ superadmin: true }, function(error, result){
+								let adminEmails = [];
+								result.forEach((admin, i) => {
+									adminEmails.push(admin.email)
+								});
+								const newPendingUser = new PendingUser({
+									name: req.body.name,
+									email: req.body.email,
+									post: "Admin",
+									message: req.body.message
+								})
+								newPendingUser.save(function(error, doc){
+									if(error){
+										res.status(200).send({ auth: true, changed: false, message: "Error Sending Your Request." });
+									} else {
+										const adminMessage = {
+											 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+											 to: adminEmails,
+											 replyTo: process.env.REPLYTOMAIL,
+											 subject: 'Glory to Heaven - Admin Request', // Subject line
+											 html: `<p>The Following Person has Requested Super-Admin Previlage to Glory to Heaven.</p><b><u>Details:</u></b><p>Name: - <b>${req.body.name}</b></p><p>Email - <b>${req.body.email}</b></p><p>Message from Recipient - <b>${req.body.message}</b></p>Any Issues, Reply to this Mail, Our Super Admins will Contact You<p>` // Plain text body
+										};
+										const userMessage = {
+											 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+											 to: req.body.email,
+											 replyTo: process.env.REPLYTOMAIL,
+											 subject: 'Your Request is Pending Confirmation.', // Subject line
+											 html: `<p>Your Request is Pending Confirmation from Admins.</p><p>Till we Process the Data, Please be Patient.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+										};
+										transport.sendMail(adminMessage, function(error, info){
+											if(error){
+												console.log(error);
+											} else {
+												console.log(info);
+											}
+										})
+										transport.sendMail(userMessage, function(error, info){
+											if(error){
+												console.log(error);
+											} else {
+												console.log(info);
+											}
+										})
+										res.status(200).send({auth: true, registered: true, message: "Your Request has been Sent to our Admins for Processing" });
+									}
+								})
+							})
+						} else {
+							res.status(200).send({ auth: true, changed: false, message: "You Need to be a Admin to Request to be a Super Admin." });
+						}
+					}
+				} else {
+					res.status(200).send({ auth: true, changed: false, message: "BAD REQUEST" });
+				}
+			})
 		}
 	})
 })
@@ -847,6 +881,154 @@ app.post('/deleteadmin', function(req, res){
 			}
 		} else {
 			res.status(200).send({ auth: false, registered: false, deleted: false, message: "BAD REQUEST" });
+		}
+	})
+})
+
+app.post('/getusers', function(req, res){
+	User.findOne({ email: req.body.email }, function(error, result){
+		if(result){
+			if(result.admin){
+				User.find({ admin: false, superadmin: false }, function(error, result){
+					if(result){
+						if(result.length == 0){
+							res.status(200).send({ auth: false, registered: false, message: "No Users Found" });
+						} else {
+							const secureUsers = result.map(item => {
+								return {
+									name: item['name'],
+									email: item['email'],
+									admin: item['admin'],
+									superadmin: item['superadmin'],
+									verified: item['verified'],
+									role: item['role']
+								}
+							})
+								res.status(200).send({ auth: true, registered: true, users: secureUsers });
+							}
+						} else {
+							res.status(200).send({ auth: false, registered: false, message: "Error Processing Your Request" });
+						}
+					})
+			} else {
+				res.status(200).send({ auth: false, registered: false, message: "You are Unauthorized" });
+			}
+		} else {
+			res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" });
+		}
+	})
+})
+
+app.post('/getall', function(req, res){
+	User.findOne({ email: req.body.email }, function(error, result){
+		if(result){
+			if(result.admin){
+				if(result.superadmin){
+					User.find({}, function(error, result){
+						if(result){
+							if(result.length == 0){
+								res.status(200).send({ auth: false, registered: false, message: "No Users Found" });
+							} else {
+								const secureUsers = result.map(item => {
+									return {
+										name: item['name'],
+										email: item['email'],
+										admin: item['admin'],
+										superadmin: item['superadmin'],
+										verified: item['verified'],
+										role: item['role']
+									}
+								})
+									res.status(200).send({ auth: true, registered: true, users: secureUsers });
+							}
+						} else {
+							res.status(200).send({ auth: false, registered: false, message: "Error Processing Your Request" });
+						}
+					})
+				} else {
+					res.status(200).send({ auth: false, registered: false, message: "You are Unauthorized" });
+				}
+			} else {
+				res.status(200).send({ auth: false, registered: false, message: "You are Unauthorized" });
+			}
+		} else {
+			res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" });
+		}
+	})
+})
+
+app.post('/getadmins', function(req, res){
+	User.findOne({ email: req.body.email }, function(error, result){
+		if(result){
+			if(result.admin){
+				if(result.superadmin){
+					User.find({ admin: true, superadmin: false }, function(error, result){
+						if(result){
+							if(result.length == 0){
+								res.status(200).send({ auth: false, registered: false, message: "No Users Found" });
+							} else {
+								const secureUsers = result.map(item => {
+									return {
+										name: item['name'],
+										email: item['email'],
+										admin: item['admin'],
+										superadmin: item['superadmin'],
+										verified: item['verified'],
+										role: item['role']
+									}
+								})
+									res.status(200).send({ auth: true, registered: true, users: secureUsers });
+							}
+						} else {
+							res.status(200).send({ auth: false, registered: false, message: "Error Processing Your Request" });
+						}
+					})
+				} else {
+					res.status(200).send({ auth: false, registered: false, message: "You are Unauthorized" });
+				}
+			} else {
+				res.status(200).send({ auth: false, registered: false, message: "You are Unauthorized" });
+			}
+		} else {
+			res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" });
+		}
+	})
+})
+
+app.post('/getsuperadmins', function(req, res){
+	User.findOne({ email: req.body.email }, function(error, result){
+		if(result){
+			if(result.admin){
+				if(result.superadmin){
+					User.find({ admin: true, superadmin: true }, function(error, result){
+						if(result){
+							if(result.length == 0){
+								res.status(200).send({ auth: false, registered: false, message: "No Users Found" });
+							} else {
+								const secureUsers = result.map(item => {
+									return {
+										name: item['name'],
+										email: item['email'],
+										admin: item['admin'],
+										superadmin: item['superadmin'],
+										verified: item['verified'],
+										role: item['role']
+									}
+								})
+									res.status(200).send({ auth: true, registered: true, users: secureUsers });
+							}
+						} else {
+							res.status(200).send({ auth: false, registered: false, message: "Error Processing Your Request" });
+						}
+					})
+				} else {
+					res.status(200).send({ auth: false, registered: false, message: "You are Unauthorized" });
+				}
+			} else {
+				res.status(200).send({ auth: false, registered: false, message: "You are Unauthorized" });
+			}
+		} else {
+			res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" });
 		}
 	})
 })
