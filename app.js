@@ -511,6 +511,98 @@ app.post('/spamadmin', function(req, res){
 	})
 })
 
+app.post('/getspamusers', function(req, res){
+	User.findOne({ email: req.body.adminuseremail }, function(error, result){
+		if(result){
+			if(result.admin){
+				SpamUser.find({}, function(error, result){
+					if(result){
+						if(result.length == 0){
+							res.status(200).send({ auth: false, registered: true, message: "Error Processing Your Request." })
+						} else {
+							res.status(200).send({ auth: true, registered: true, users: result })
+						}
+					} else {
+						res.status(200).send({ auth: false, registered: true, message: "Error Processing Your Request." })
+					}
+				})
+			} else {
+				res.status(200).send({ auth: false, registered: true, message: "You are Unauthorized" })
+			}
+		} else {
+			res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
+		}
+	})
+})
+
+app.post('/getpendingusers', function(req, res){
+	User.findOne({ email: req.body.adminuseremail }, function(error, result){
+		if(result){
+			if(result.admin){
+				PendingUser.find({ post: "User" }, function(error, result){
+					if(result.length == 0){
+						res.status(200).send({ auth: false, registered: true, message: "No Pending Users" })
+					} else {
+						res.status(200).send({ auth: true, registered: true, users: result })
+					}
+				})
+			} else {
+				res.status(200).send({ auth: false, registered: true, message: "You are Unauthorized" })
+			}
+		} else {
+			res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
+		}
+	})
+})
+
+app.post('/getpendingadmins', function(req, res){
+	User.findOne({ email: req.body.adminuseremail }, function(error, result){
+		if(result){
+			if(result.admin){
+				if(result.superadmin){
+					PendingUser.find({ post: "Admin" }, function(error, result){
+						if(result.length == 0){
+							res.status(200).send({ auth: false, registered: true, message: "No Pending Users" })
+						} else {
+							res.status(200).send({ auth: true, registered: true, users: result })
+						}
+					})
+				} else {
+					res.status(200).send({ auth: false, registered: true, message: "You are Unauthorized" })
+				}
+			} else {
+				res.status(200).send({ auth: false, registered: true, message: "You are Unauthorized" })
+			}
+		} else {
+			res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
+		}
+	})
+})
+
+app.post('/getpendingsuperadmins', function(req, res){
+	User.findOne({ email: req.body.adminuseremail }, function(error, result){
+		if(result){
+			if(result.admin){
+				if(result.superadmin){
+					PendingUser.find({ post: "SuperAdmin" }, function(error, result){
+						if(result.length == 0){
+							res.status(200).send({ auth: false, registered: true, message: "No Pending Users" })
+						} else {
+							res.status(200).send({ auth: true, registered: true, users: result })
+						}
+					})
+				} else {
+					res.status(200).send({ auth: false, registered: true, message: "You are Unauthorized" })
+				}
+			} else {
+				res.status(200).send({ auth: false, registered: true, message: "You are Unauthorized" })
+			}
+		} else {
+			res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
+		}
+	})
+})
+
 app.post('/adminperms', function(req, res){
 	PendingUser.findOne({ email: req.body.email, post: "Admin" }, function(error, result){
 		if(result){
