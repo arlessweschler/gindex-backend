@@ -62,6 +62,14 @@ const pendingUserSchema = {
 	message: { type: String }
 };
 
+const invitedUserSchema = {
+	name: { type: String, required: true },
+	post: { type: String, required: true },
+	email: { type: String, lowercase: true, required: true, unique: true },
+	message: { type: String },
+	invitedby: { type: String, lowercase: true, required: true }
+};
+
 // Spam User Database Model
 const spamUserSchema = {
 	name: { type: String, required: true },
@@ -73,7 +81,8 @@ const spamUserSchema = {
 // Defining Mongoose Model
 const User = mongoose.model("User", userSchema);
 const PendingUser = mongoose.model("PendingUser", pendingUserSchema);
-const SpamUser = mongoose.model("SpanUser", spamUserSchema);
+const InvitedUser = mongoose.model("InvitedUser", invitedUserSchema);
+const SpamUser = mongoose.model("SpamUser", spamUserSchema);
 
 // Define Mail Transporter
 let transport = nodemailer.createTransport({
@@ -150,6 +159,19 @@ app.post('/request', function(req, res){
 						if(result){
 							res.status(200).send({auth: false, registered: false, message: "User already Registered with this Email." });
 						} else {
+							InvitedUser.findOne({ email: req.body.email, post: "User" }, function(error, result){
+								if(result){
+									InvitedUser.deleteOne({ email: req.body.email, post: "User" }, function(error){
+										if(error){
+											console.log(error);
+										} else {
+											console.log("Deleted");
+										}
+									})
+								} else {
+									console.log("Request Not Found");
+								}
+							})
 							User.find({ admin: true }, function(error, result){
 								let adminEmails = [];
 								result.forEach((admin, i) => {
@@ -535,6 +557,197 @@ app.post('/getspamusers', function(req, res){
 	})
 })
 
+app.post('/inviteusers', function(req, res){
+	InvitedUser.findOne({ email: req.body.email, post: "User" }, function(error, result){
+		if(result){
+			res.status(200).send({ auth: false, registered: true, message: 'User is Already Invited. Do not Send Another Time.'});
+		} else {
+			User.findOne({ email: req.body.adminuseremail }, function(error, result){
+				if(result){
+					if(result.admin){
+						User.findOne({ email: req.body.email }, function(error, result){
+							if(result){
+								if(result.superadmin){
+									res.status(200).send({ auth: false, registered: true, message: "User is Already Present & he is a Super Admin." })
+								} else {
+									if(result.admin){
+										res.status(200).send({ auth: false, registered: true, message: "User is Already Present & he is a Admin." })
+									} else {
+											res.status(200).send({ auth: false, registered: true, message: "User is Already Present" })
+									}
+								}
+							} else {
+								const newInvitedAdmin = new InvitedUser({
+									name: result.name,
+									email: result.email,
+									post: "User",
+									message: req.body.message,
+									invitedby: req.body.adminuseremail
+								})
+								newInvitedAdmin.save(function(error, doc){
+									if(error){
+										res.status(200).send({ auth: false, registered: true, message: "Error Processing Your Request." })
+									} else {
+										const message = {
+											 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+											 to: req.body.email,
+											 replyTo: process.env.REPLYTOMAIL,
+											 subject: 'You have been Invited for Admin Post', // Subject line
+											 html: `<p>You Have been Invited for Admin by - ${req.body.adminuseremail}. His Message to You - ${req.body.message}.</p><p> If You Accept this Invite, then go to MySettings Page and Request Admin Status.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+										};
+										transport.sendMail(message, function(err, info){
+											if(err){
+												console.log(err);
+											} else {
+												console.log(info);
+											}
+										})
+										res.status(200).send({ auth: true, registered: true, message: 'An Invite Email has been Sent to his Email Address.'});
+									}
+								})
+							}
+						})
+					} else {
+						res.status(200).send({ auth: false, registered: true, message: "You are Unauthorized" })
+					}
+				} else {
+					res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
+				}
+			})
+		}
+	})
+})
+
+app.post('/inviteadmin', function(req, res){
+	InvitedUser.findOne({ email: req.body.email, post: "Admin" }, function(error, result){
+		if(result){
+			res.status(200).send({ auth: false, registered: true, message: 'User is Already Invited. Do not Send Another Time.'});
+		} else {
+			User.findOne({ email: req.body.adminuseremail }, function(error, result){
+				if(result){
+					if(result.admin){
+						if(result.superadmin){
+							User.findOne({ email: req.body.email }, function(error, result){
+								if(result){
+									if(result.superadmin){
+										res.status(200).send({ auth: false, registered: true, message: "User is Already a Super Admin." })
+									} else {
+										if(result.admin){
+											res.status(200).send({ auth: false, registered: true, message: "User is Already a Admin." })
+										} else {
+											const newInvitedAdmin = new InvitedUser({
+												name: result.name,
+												email: result.email,
+												post: "Admin",
+												message: req.body.message,
+												invitedby: req.body.adminuseremail
+											})
+											newInvitedAdmin.save(function(error, doc){
+												if(error){
+													res.status(200).send({ auth: false, registered: true, message: "Error Processing Your Request." })
+												} else {
+													const message = {
+														 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+														 to: req.body.email,
+														 replyTo: process.env.REPLYTOMAIL,
+														 subject: 'You have been Invited for Admin Post', // Subject line
+														 html: `<p>You Have been Invited for Admin by - ${req.body.adminuseremail}. His Message to You - ${req.body.message}.</p><p> If You Accept this Invite, then go to MySettings Page and Request Admin Status.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+													};
+													transport.sendMail(message, function(err, info){
+														if(err){
+															console.log(err);
+														} else {
+															console.log(info);
+														}
+													})
+													res.status(200).send({ auth: true, registered: true, message: 'An Invite Email has been Sent to his Email Address.'});
+												}
+											})
+										}
+									}
+								} else {
+									res.status(200).send({ auth: false, registered: true, message: "No User Found with This Email." })
+								}
+							})
+						} else {
+							res.status(200).send({ auth: false, registered: true, message: "You are Unauthorized" })
+						}
+					} else {
+						res.status(200).send({ auth: false, registered: true, message: "You are Unauthorized" })
+					}
+				} else {
+					res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
+				}
+			})
+		}
+	})
+})
+
+app.post('/invitesuperadmin', function(req, res){
+	InvitedUser.findOne({ email: req.body.email, post: "SuperAdmin"}, function(error,result){
+		if(result){
+			res.status(200).send({ auth: false, registered: true, message: 'User is Already Invited. Do not Send Another Time.'});
+		} else {
+			User.findOne({ email: req.body.adminuseremail }, function(error, result){
+				if(result){
+					if(result.admin){
+						if(result.superadmin){
+							User.findOne({ email: req.body.email }, function(error, result){
+								if(result){
+									if(result.superadmin){
+										res.status(200).send({ auth: false, registered: true, message: "User is Already a Super Admin." })
+									} else {
+										if(result.admin){
+											const newInvitedAdmin = new InvitedUser({
+												name: result.name,
+												email: result.email,
+												post: "SuperAdmin",
+												message: req.body.message,
+												invitedby: req.body.adminuseremail
+											})
+											newInvitedAdmin.save(function(error, doc){
+												if(error){
+													res.status(200).send({ auth: false, registered: true, message: "Error Processing Your Request." })
+												} else {
+													const message = {
+														 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+														 to: req.body.email,
+														 replyTo: process.env.REPLYTOMAIL,
+														 subject: 'You have been Invited for SuperAdmin Post', // Subject line
+														 html: `<p>You Have been Invited for SuperAdmin by - ${req.body.adminuseremail}. His Message to You - ${req.body.message}.</p><p> If You Accept this Invite, then go to MySettings Page and Request SuperAdmin Status.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+													};
+													transport.sendMail(message, function(err, info){
+														if(err){
+															console.log(err);
+														} else {
+															console.log(info);
+														}
+													})
+													res.status(200).send({ auth: true, registered: true, message: 'An Invite Email has been Sent to his Email Address.'});
+												}
+											})
+										} else {
+												res.status(200).send({ auth: false, registered: true, message: "User Should be an Admin to become a Superadmin" })
+										}
+									}
+								} else {
+									res.status(200).send({ auth: false, registered: true, message: "No User Found with This Email." })
+								}
+							})
+						} else {
+							res.status(200).send({ auth: false, registered: true, message: "You are Unauthorized" })
+						}
+					} else {
+						res.status(200).send({ auth: false, registered: true, message: "You are Unauthorized" })
+					}
+				} else {
+					res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
+				}
+			})
+		}
+	})
+})
+
 app.post('/getpendingusers', function(req, res){
 	User.findOne({ email: req.body.adminuseremail }, function(error, result){
 		if(result){
@@ -634,6 +847,13 @@ app.post('/adminperms', function(req, res){
 														console.log(info);
 													}
 												})
+												InvitedUser.deleteOne({ email: req.body.email, post: "Admin" }, function(error){
+													if(error){
+														console.log(error)
+													} else {
+														console.log("Not Found");
+													}
+												})
 												PendingUser.deleteOne({ email: req.body.email, post: "Admin" }, function(error){
 													if(error){
 														console.log(error)
@@ -701,6 +921,13 @@ app.post('/superadminperms', function(req, res){
 																console.log(info);
 															}
 														});
+														InvitedUser.deleteOne({ email: req.body.email, post: "SuperAdmin" }, function(error){
+															if(error){
+																console.log(error)
+															} else {
+																console.log("Not Found");
+															}
+														})
 														PendingUser.deleteOne({ email: req.body.email, post: "SuperAdmin" }, function(error){
 															if(error){
 																console.log(error)
@@ -916,6 +1143,45 @@ app.post('/deleteuser', function(req, res){
 							}
 						})
 					}
+				} else {
+					res.status(200).send({ auth: false, registered: true, deleted: false, message: "Your Admin Password is Wrong" });
+				}
+			} else {
+				res.status(200).send({ auth: false, registered: false, deleted: false, message: "You are Unauthorized" });
+			}
+		} else {
+			res.status(200).send({ auth: false, registered: false, deleted: false, message: "BAD REQUEST" });
+		}
+	})
+});
+
+app.post('/deleteme', function(req, res){
+	User.findOne({ email: req.body.email }, function(error, result){
+		if(result){
+			if(result.admin){
+				if(bcrypt.compareSync(req.body.pass, result.password)){
+					User.deleteOne({ email: req.body.email }, function(error){
+						if(error){
+							res.status(200).send({ auth: true, registered: true, deleted: false, message: "Some Error Pinging the Servers. Try Again Later." });
+						} else {
+							const deleteMessage = {
+								 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+								 to: req.body.email,
+								 bcc: req.body.ADMINEMAIL,
+								 replyTo: process.env.REPLYTOMAIL,         // List of recipients
+								 subject: 'Account has been Deleted.', // Subject line
+								 html: `<p>Your Account has been Deleted.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You.</p>` // Plain text body
+							};
+							transport.sendMail(deleteMessage, function(error, info){
+								if(error){
+									console.log(error);
+								} else {
+									console.log(info);
+								}
+							})
+							res.status(200).send({ auth: true, registered: true, deleted: true, message: "Your Account has been deleted" });
+						}
+					})
 				} else {
 					res.status(200).send({ auth: false, registered: true, deleted: false, message: "Your Admin Password is Wrong" });
 				}
