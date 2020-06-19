@@ -933,9 +933,10 @@ app.post('/superadminperms', function(req, res){
 															if(error){
 																console.log(error)
 															} else {
-																res.status(200).send({ auth: true, registered: true, changed: true, message: "User has been Promoted to Super Admin" });
+																console.log(error)
 															}
 														})
+														res.status(200).send({ auth: true, registered: true, changed: true, message: "User has been Promoted to Super Admin" });
 													}
 												})
 											}
