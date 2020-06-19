@@ -257,7 +257,7 @@ app.post('/register-newuser', function(req, res){
 											     subject: 'We Have Accepted Your Request.', // Subject line
 											     html: `<b>As Per Your Request We have Registered you in Our Website</b><p>Now You can Login with Your Email</p><p>Here is Your One Time Password - <b>${temporaryPass}</b></p><p>One Time Password is Valid for only 3 Hours</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
 											 	};
-												PendingUser.deleteOne({ email: req.body.mail }, function(pendingError){
+												PendingUser.deleteOne({ email: req.body.email }, function(pendingError){
 													if(!pendingError){
 														transport.sendMail(message, function(err, info) {
 																if (err) {
