@@ -858,9 +858,10 @@ app.post('/adminperms', function(req, res){
 													if(error){
 														console.log(error)
 													} else {
-														res.status(200).send({ auth: true, registered: true, changed: true, message: "User has been Promoted to Admin" });
+														console.log("Not Found");
 													}
 												})
+												res.status(200).send({ auth: true, registered: true, changed: true, message: "User has been Promoted to Admin" });
 											} else {
 													res.status(200).send({ auth: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
 											}
