@@ -95,6 +95,10 @@ let transport = nodemailer.createTransport({
 	}
 });
 
+app.get('/', function(req, res){
+	res.send("This is a DB Site");
+})
+
 app.post('/', function(req, res){
 	var randomPingms = Math.floor(Math.random() * 50) + Math.floor(Math.random() * 50);
 	res.status(200).send({ server: "running", status: 200, message: "server-running", ping: randomPingms })
