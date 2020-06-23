@@ -125,8 +125,6 @@ app.post('/login', function(req, res){
 								var expiryUnix = issueUnix + 604800;
 								var expiryUnixTime = expiryUnix * 1000;
 								var issuedUnixTime = issueUnix * 1000;
-								const issueDate = new Date(issuedUnixTime).toLocaleString();
-								const expiryDate = new Date(expiryUnixTime).toLocaleString();
 								console.log(issueUnix, expiryUnix);
 								const userData = {
 									email: existUser.email,
@@ -136,7 +134,7 @@ app.post('/login', function(req, res){
 									superadmin: existUser.superadmin,
 									verified: existUser.verified,
 								}
-								res.status(200).send({ auth: true, registered: true, token: token, tokenuser:userData, issuedat: issueDate, expiryat: expiryDate });
+								res.status(200).send({ auth: true, registered: true, token: token, tokenuser:userData, issuedat: issuedUnixTime, expiryat: expiryUnixTime });
 							} else {
 								res.status(200).send({ auth: false, registered: true, token: null, message: "User Password is Wrong" });
 							}
