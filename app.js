@@ -580,8 +580,8 @@ app.post('/inviteusers', function(req, res){
 								}
 							} else {
 								const newInvitedAdmin = new InvitedUser({
-									name: result.name,
-									email: result.email,
+									name: req.body.name,
+									email: req.body.email,
 									post: "User",
 									message: req.body.message,
 									invitedby: req.body.adminuseremail
