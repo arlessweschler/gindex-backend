@@ -1,5 +1,6 @@
 // Keep Site Online By Pinging every 25 Minutes.
 const site = process.env.SITE;
+const axios = require('axios');
 
 function keepalive() {
   if (site) {
