@@ -1,0 +1,50 @@
+const mongoose = require('mongoose');
+
+// User Database Model
+const userSchema = {
+  name: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    lowercase: true,
+    required: true,
+    unique: true
+  },
+	password: {
+    type: String,
+    default: null
+  },
+	temppassword: {
+    type: String
+  },
+	temprestricted: {
+    type: Boolean,
+    default: false
+  },
+	role: {
+    type: String,
+    required: true,
+    default: 'user'
+  },
+	admin: {
+    type: Boolean,
+    required: true,
+    default: false 
+  },
+	superadmin: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+	verified: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+};
+
+const User = mongoose.model("User", userSchema);
+
+module.exports = User;
