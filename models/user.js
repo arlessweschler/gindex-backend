@@ -12,6 +12,10 @@ const userSchema = {
     required: true,
     unique: true
   },
+  avatar: {
+    type: String,
+    lowercase: true,
+  },
 	password: {
     type: String,
     default: null
@@ -31,7 +35,7 @@ const userSchema = {
 	admin: {
     type: Boolean,
     required: true,
-    default: false 
+    default: false
   },
 	superadmin: {
     type: Boolean,

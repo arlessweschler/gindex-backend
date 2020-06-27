@@ -17,7 +17,10 @@ router.post('/all', function(req, res){
 							if(result.length == 0){
 								res.status(200).send({ auth: false, registered: false, message: "No Users Found" });
 							} else {
-								const secureUsers = result.map(item => {
+								const filteredUsers = result.filter(user => {
+									return user.email != req.body.email;
+								})
+								const secureUsers = filteredUsers.map(item => {
 									return {
 										name: item['name'],
 										email: item['email'],
@@ -54,7 +57,10 @@ router.post('/users', function(req, res){
 						if(result.length == 0){
 							res.status(200).send({ auth: false, registered: false, message: "No Users Found" });
 						} else {
-							const secureUsers = result.map(item => {
+							const filteredUsers = result.filter(user => {
+								return user.email != req.body.email;
+							});
+							const secureUsers = filteredUsers.map(item => {
 								return {
 									name: item['name'],
 									email: item['email'],
@@ -89,7 +95,10 @@ router.post('/admins', function(req, res){
 							if(result.length == 0){
 								res.status(200).send({ auth: false, registered: false, message: "No Users Found" });
 							} else {
-								const secureUsers = result.map(item => {
+								const filteredUsers = result.filter(user => {
+									return user.email != req.body.email;
+								});
+								const secureUsers = filteredUsers.map(item => {
 									return {
 										name: item['name'],
 										email: item['email'],
@@ -127,7 +136,10 @@ router.post('/superadmins', function(req, res){
 							if(result.length == 0){
 								res.status(200).send({ auth: false, registered: false, message: "No Users Found" });
 							} else {
-								const secureUsers = result.map(item => {
+								const filteredUsers = result.filter(user => {
+									return user.email != req.body.email;
+								});
+								const secureUsers = filteredUsers.map(item => {
 									return {
 										name: item['name'],
 										email: item['email'],
