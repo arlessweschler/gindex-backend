@@ -218,6 +218,36 @@ router.post('/user', function(req, res){
 	}
 });
 
+router.post('/rootuser', function(req, res){
+	User.findOne({ $or: [ { email: req.body.email }, { superadmin: true } ] }, function(error, result){
+		if(result){
+			res.render("dashboard.ejs", {user:false, data: "SuperAdmin Already Exists. You Cannot Proceed Here afterwards. Continue Through Your Frontend"})
+		} else {
+			if(process.env.SITE_SECRET == req.body.secret){
+				const newRootUser = new User({
+					name: req.body.name,
+					email: req.body.email,
+					temppassword: null,
+					password: bcrypt.hashSync(req.body.password, 10),
+					role: "Super Admin",
+					admin: true,
+					superadmin: true,
+					verified: true,
+				})
+				newRootUser.save(function(error, doc){
+					if(!error){
+						res.render("dashboard.ejs", {user:true, details: newRootUser, fronturl: process.env.FRONTENDURL})
+					} else {
+						res.render("dashboard.ejs", {user:false, data: "There's an Error While Saving your Details. Please Try Again."})
+					}
+				})
+			} else {
+				res.render("dashboard.ejs", {user:false, data: "Your Secret Doesn't Match."})
+			}
+		}
+	})
+})
+
 router.use('/approve', require('./approve'));
 
 module.exports = router;
