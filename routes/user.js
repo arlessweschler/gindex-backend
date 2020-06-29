@@ -8,9 +8,9 @@ const transport = require('../plugins/mailtransporter');
 const User = require("../models/user");
 
 router.post('/verify', function(req, res){
-	console.log(req.headers.host);
-	var allowedHost = process.env.NODE_ENV == "development" ? "localhost:3000" : "glorytoheaven.tk";
-	console.log(allowedHost);
+	console.log(req.headers.origin);
+	var allowedOrigin = process.env.NODE_ENV == "development" ? "localhost:3000" : "glorytoheaven.tk";
+	console.log(allowedOrigin);
 	User.findOne({ email: req.body.email }, function(error, result){
 		if(result){
 			jwt.verify(req.body.token, process.env.TOKENSECRET, function(error, decoded){
