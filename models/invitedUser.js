@@ -15,6 +15,11 @@ const invitedUserSchema = {
     required: true,
     unique: true
   },
+	invitedDate: {
+		type: Number,
+    required: true,
+    default: Date.now,
+  },
 	message: {
     type: String
   },

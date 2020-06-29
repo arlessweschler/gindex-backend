@@ -10,6 +10,11 @@ const pendingUserSchema = {
     type: String,
     required: true
   },
+	pendingFrom: {
+		type: Number,
+    required: true,
+    default: Date.now,
+  },
 	email: {
     type: String,
     lowercase: true,

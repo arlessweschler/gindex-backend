@@ -5,10 +5,12 @@ var ping = require('ping');
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const keepAlive = require('./plugins/keepAlive');
+const deleteUsers = require('./plugins/deleteUsers');
 const app = express();
 
-keepAlive();
 
+keepAlive();
+deleteUsers();
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: false}));
