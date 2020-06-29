@@ -1,6 +1,6 @@
 {
-  "name": "nodejs",
-  "version": "2.0.0",
+  "name": "g-index-backend",
+  "version": "2.0.1",
   "description": "",
   "main": "app.js",
   "scripts": {
