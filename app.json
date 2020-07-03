@@ -1,6 +1,6 @@
 {
 	"name": "G-Index Backend",
-	"description": "Run aria2c on heroku",
+	"description": "This is the Live Backend Server for G-Index for Authenticating Users",
 	"repository": "https://github.com/tks18/gindex-backend",
 	"keywords": ["gindex-backend"],
 	"env": {
