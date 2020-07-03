@@ -128,7 +128,7 @@ router.post('/rootuser', function(req, res){
 		if(result){
 			res.render("dashboard.ejs", {user:false, data: "SuperAdmin Already Exists. You Cannot Proceed Here afterwards. Continue Through Your Frontend"})
 		} else {
-			if(process.env.SITE_SECRET == req.body.secret){
+			if(process.env.SITESECRET == req.body.secret){
 				const newRootUser = new User({
 					name: req.body.name,
 					email: req.body.email,
