@@ -6,11 +6,13 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const keepAlive = require('./plugins/keepAlive');
 const deleteUsers = require('./plugins/deleteUsers');
+const deleteObsoleteUsers = require('./plugins/deletePendingUsers');
 const app = express();
 
 
 keepAlive();
 deleteUsers();
+deleteObsoleteUsers();
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: false}));
