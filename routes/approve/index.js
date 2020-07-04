@@ -14,7 +14,7 @@ router.post('/otp', function(req, res){
 			var tempPassIsThere = result.temppassword != null ? true : false;
 			var passNotThere = result.password == null ? true : false;
 			if(tempPassIsThere && passNotThere){
-				if(req.body.otp && result.password){
+				if(req.body.otp && result.temppassword){
 					if(bcrypt.compareSync(req.body.otp, result.temppassword)){
 						var newPass = req.body.newpassword;
 						User.updateOne({ email: req.body.email }, {$set: { password: bcrypt.hashSync(newPass, 10), temppassword: null, verified: true }}, function(error){
