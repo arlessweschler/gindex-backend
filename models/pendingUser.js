@@ -10,6 +10,10 @@ const pendingUserSchema = {
     type: String,
     required: true
   },
+	drive: {
+		type: Number,
+		required: true,
+	},
 	pendingFrom: {
 		type: Number,
     required: true,
