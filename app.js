@@ -20,11 +20,10 @@ app.use(bodyParser.json());
 
 // Allow Cross Origin Requests
 app.use(function(req, res, next) {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', '*');
-    res.header('Access-Control-Allow-Headers', '*');
-    next();
-})
+  res.header("Access-Control-Allow-Origin", process.env.NODE_ENV == "production" ? process.env.FRONTENDURL : "http://localhost:8080"); // update to match the domain you will make the request from
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 
 mongoose.connect(process.env.DBURL, {useNewUrlParser: true,  useUnifiedTopology: true, useCreateIndex: true})
 
