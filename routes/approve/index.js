@@ -14,32 +14,36 @@ router.post('/otp', function(req, res){
 			var tempPassIsThere = result.temppassword != null ? true : false;
 			var passNotThere = result.password == null ? true : false;
 			if(tempPassIsThere && passNotThere){
-				if(bcrypt.compareSync(req.body.otp, result.temppassword)){
-					var newPass = req.body.newpassword;
-					User.updateOne({ email: req.body.email }, {$set: { password: bcrypt.hashSync(newPass, 10), temppassword: null, verified: true }}, function(error){
-						if(!error){
-							const otpMessage = {
-								 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
-								 to: req.body.email,
-								 bcc: process.env.ADMINEMAIL,
-								 replyTo: process.env.REPLYTOMAIL,        // List of recipients
-								 subject: 'Account Verified', // Subject line
-								 html: `<b>Your email ${req.body.email} has been Verified. Now you can Login with Your Password.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
-							};
-							transport.sendMail(otpMessage, function(err, info){
-								if(err){
-									console.log(err);
-								} else {
-									console.log(info);
-								}
-							});
-							res.status(200).send({ auth: true, registered: true, changed: true, message: `Your email ${req.body.email} has been Verified.`});
-						} else {
-							res.status(200).send({ auth: true, registered: true, changed: false, message: 'Error While Changing password'})
-						}
-					})
+				if(req.body.otp && result.password){
+					if(bcrypt.compareSync(req.body.otp, result.temppassword)){
+						var newPass = req.body.newpassword;
+						User.updateOne({ email: req.body.email }, {$set: { password: bcrypt.hashSync(newPass, 10), temppassword: null, verified: true }}, function(error){
+							if(!error){
+								const otpMessage = {
+									 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+									 to: req.body.email,
+									 bcc: process.env.ADMINEMAIL,
+									 replyTo: process.env.REPLYTOMAIL,        // List of recipients
+									 subject: 'Account Verified', // Subject line
+									 html: `<b>Your email ${req.body.email} has been Verified. Now you can Login with Your Password.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+								};
+								transport.sendMail(otpMessage, function(err, info){
+									if(err){
+										console.log(err);
+									} else {
+										console.log(info);
+									}
+								});
+								res.status(200).send({ auth: true, registered: true, changed: true, message: `Your email ${req.body.email} has been Verified.`});
+							} else {
+								res.status(200).send({ auth: true, registered: true, changed: false, message: 'Error While Changing password'})
+							}
+						})
+					} else {
+						res.status(200).send({ auth: true, registered: true, changed: false, message: "Wrong OTP" })
+					}
 				} else {
-					res.status(200).send({ auth: true, registered: true, changed: false, message: "Wrong OTP" })
+					res.status(200).send({ auth: false, registered: true, token: null, message: "Password is Null. Please Enter Your Password" });
 				}
 			} else {
 				res.status(200).send({ auth: true, registered: true, changed: false, message: "It Looks Like You Already Have been Verified" })
