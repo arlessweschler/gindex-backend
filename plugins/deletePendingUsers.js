@@ -66,7 +66,7 @@ function deleteObsoleteUsers() {
         console.log("No Invited Users")
       }
     })
-  }, 80400000)
+  }, 10800000)
 }
 
 module.exports = deleteObsoleteUsers;
