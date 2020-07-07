@@ -153,6 +153,7 @@ router.post('/admin', function(req, res){
 									const newPendingUser = new PendingUser({
 										name: req.body.name,
 										email: req.body.email,
+										drive: 0,
 										post: "Admin",
 										message: req.body.message
 									})
@@ -248,7 +249,8 @@ router.post('/superadmin', function(req, res){
 									const newPendingUser = new PendingUser({
 										name: req.body.name,
 										email: req.body.email,
-										post: "Admin",
+										post: "SuperAdmin",
+										drive: 0,
 										message: req.body.message
 									})
 									newPendingUser.save(function(error, doc){

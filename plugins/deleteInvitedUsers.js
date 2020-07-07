@@ -1,31 +1,24 @@
 const transport = require('./mailtransporter');
-const PendingUser = require("../models/pendingUser");
-const deletePendingUserTemplate = require('../templates/delete/pending/toAll');
+const InvitedUser = require("../models/invitedUser");
+const toInvitedUserEmail = require('../templates/delete/invitedUsers/toAll');
 
-function deletePendingUsers() {
+function deleteInvitedUsers() {
   console.log("Triggered Verification Check")
-  PendingUser.find({}, function(error, result){
+  InvitedUser.find({}, function(error, result){
     if(result){
       result.forEach((user, i) => {
         const currentTime = Date.now();
         const allowedTill = user.pendingFrom + (21600*1000);
         if(currentTime > allowedTill){
-          PendingUser.deleteOne({ email: user.email }, function(error){
+          InvitedUser.deleteOne({ email: user.email }, function(error){
             if(!error){
               const deleteMessage = {
                  from: `${process.env.FRONTENDSITENAME}<${process.env.EMAILID}>`,
-                 to: user.email,
+                 to: user.invitedby,
                  replyTo: process.env.REPLYTOMAIL,
-                 subject: 'Regarding Your Request',
-                 html: deletePendingUserTemplate(user),
+                 subject: `Regarding Your Invite to ${user.email}`,
+                 html: toInvitedUserEmail(user),
               };
-              transport.sendMail(deleteMessage, function(err, info){
-                if(err){
-                  console.log(err);
-                } else {
-                  console.log(info)
-                }
-              })
             } else {
               console.log("Some Error While Trying to Deleting, Will be Deleted in Next Cycle.")
             }
@@ -34,10 +27,11 @@ function deletePendingUsers() {
           console.log("You Got Some Time Left")
         }
       });
+
     } else {
-      console.log("No Pending Users")
+      console.log("No Invited Users")
     }
   })
 }
 
-module.exports = deletePendingUsers
+module.exports = deleteInvitedUsers;
