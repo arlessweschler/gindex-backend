@@ -29,7 +29,7 @@ router.post('/users', function(req, res){
 			} else {
 				res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
 			}
-		})	
+		})
 	} else {
 		res.status(200).send({auth: false, message: "Unauthorized"});
 	}

@@ -43,7 +43,7 @@ router.post('/user', function(req, res){
 															 newUser.save(function(error, doc){
 																 if(!error){
 																 	const message = {
-																     from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+																     from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
 																     to: req.body.email,
 																		 replyTo: process.env.REPLYTOMAIL,
 																     subject: 'We Have Accepted Your Request.', // Subject line
@@ -77,7 +77,7 @@ router.post('/user', function(req, res){
 																									}
 																								});
 																								const adminMessage = {
-																									 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+																									 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
 																									 to: req.body.adminuseremail,
 																									 replyTo: process.env.REPLYTOMAIL,         // List of recipients
 																									 subject: 'Don\'t Add Spam users', // Subject line

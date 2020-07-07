@@ -13,7 +13,7 @@ function deleteInvitedUsers() {
           InvitedUser.deleteOne({ email: user.email }, function(error){
             if(!error){
               const deleteMessage = {
-                 from: `${process.env.FRONTENDSITENAME}<${process.env.EMAILID}>`,
+                 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
                  to: user.invitedby,
                  replyTo: process.env.REPLYTOMAIL,
                  subject: `Regarding Your Invite to ${user.email}`,
