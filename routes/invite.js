@@ -44,7 +44,7 @@ router.post('/user', function(req, res){
 												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
 												 to: req.body.email,
 												 replyTo: process.env.REPLYTOMAIL,
-												 subject: 'You have been Invited for Admin Post', // Subject line
+												 subject: `You have been Invited to ${process.env.FRONTENDSITENAME}`, // Subject line
 												 html: `<p>You Have been Invited for Admin by - ${req.body.adminuseremail}. His Message to You - ${req.body.message}.</p><p> If You Accept this Invite, then go to MySettings Page and Request Admin Status.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
 											};
 											transport.sendMail(message, function(err, info){
