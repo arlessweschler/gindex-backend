@@ -75,7 +75,7 @@ router.post('/delete', function(req, res){
 									res.status(200).send({ auth: true, registered: true, deleted: false, message: "Some Error Pinging the Servers. Try Again Later." });
 								} else {
 									const deleteMessage = {
-										 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+										 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
 										 to: req.body.email,
 										 bcc: req.body.ADMINEMAIL,
 										 replyTo: process.env.REPLYTOMAIL,         // List of recipients

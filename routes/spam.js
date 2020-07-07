@@ -28,7 +28,7 @@ router.post('/user', function(req, res){
 										res.status(200).send({ auth: true, registered: false, message: "Error Processing Request. Try Again Later" });
 									} else {
 										const message = {
-											 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+											 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
 											 to: req.body.email,
 											 replyTo: process.env.REPLYTOMAIL,
 											 subject: 'You Have Been Flagged', // Subject line
@@ -83,7 +83,7 @@ router.post('/admin', function(req, res){
 											res.status(200).send({ auth: true, registered: false, message: "Error Processing Request. Try Again Later" });
 										} else {
 											const message = {
-												 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
 												 to: req.body.email,
 												 replyTo: process.env.REPLYTOMAIL,
 												 subject: 'You Have Been Flagged', // Subject line

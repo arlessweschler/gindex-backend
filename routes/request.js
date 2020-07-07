@@ -169,7 +169,7 @@ router.post('/admin', function(req, res){
 												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
 												 to: adminEmails,
 												 replyTo: process.env.REPLYTOMAIL,
-												 subject: '${process.env.FRONTENDSITENAME} - Admin Request',
+												 subject: `${process.env.FRONTENDSITENAME} - Admin Request`,
 												 html: existingRequestToAdminTemplate(req.body, "Admin")
 											};
 											const userMessage = {
@@ -265,7 +265,7 @@ router.post('/superadmin', function(req, res){
 												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
 												 to: adminEmails,
 												 replyTo: process.env.REPLYTOMAIL,
-												 subject: '${process.env.FRONTENDSITENAME} - Admin Request',
+												 subject: `${process.env.FRONTENDSITENAME} - Admin Request`,
 												 html: existingRequestToAdminTemplate(req.body, "Superadmin")
 											};
 											const userMessage = {

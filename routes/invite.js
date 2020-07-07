@@ -41,7 +41,7 @@ router.post('/user', function(req, res){
 											res.status(200).send({ auth: false, registered: true, message: "Error Processing Your Request." })
 										} else {
 											const message = {
-												 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
 												 to: req.body.email,
 												 replyTo: process.env.REPLYTOMAIL,
 												 subject: 'You have been Invited for Admin Post', // Subject line
@@ -103,7 +103,7 @@ router.post('/admin', function(req, res){
 														res.status(200).send({ auth: false, registered: true, message: "Error Processing Your Request." })
 													} else {
 														const message = {
-															 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
 															 to: req.body.email,
 															 replyTo: process.env.REPLYTOMAIL,
 															 subject: 'You have been Invited for Admin Post', // Subject line
@@ -170,7 +170,7 @@ router.post('/superadmin', function(req, res){
 														res.status(200).send({ auth: false, registered: true, message: "Error Processing Your Request." })
 													} else {
 														const message = {
-															 from: `"Glory to Heaven - Support"<${process.env.EMAILID}>`, // Sender address
+															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
 															 to: req.body.email,
 															 replyTo: process.env.REPLYTOMAIL,
 															 subject: 'You have been Invited for SuperAdmin Post', // Subject line
