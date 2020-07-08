@@ -1,7 +1,7 @@
 function returnTemplate(userDetails) {
   return `
   <h1><center>${process.env.FRONTENDSITENAME}</center></h1>
-  <p>The Following Person has Requested Access to Glory to Heaven Content.</p>
+  <p>The Following Person has Requested Access to ${process.env.FRONTENDSITENAME} Content.</p>
   <p>If You Know him it is Well and Good, but Don't Accept Unwanted Request and Bloat the Website</p>
   <b><u>Details:</u></b>
   <p>Name: - <b>${userDetails.name}</b></p>
