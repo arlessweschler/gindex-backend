@@ -323,5 +323,6 @@ router.post('/superadmin', function(req, res){
 	}
 })
 
+router.use('/remove', require('./remove'));
 
 module.exports = router;
