@@ -6,9 +6,10 @@ const User = require("../../models/user");
 const PendingUser = require("../../models/pendingUser");
 
 var allowedOrigin = process.env.NODE_ENV == "production" ? process.env.FRONTENDURL : "http://localhost:8080";
+var allowedHost = process.env.NODE_ENV == "production" ? process.env.SITE : "http://localhost:3000";
 
 router.post('/users', function(req, res){
-	if(req.headers.origin == allowedOrigin){
+	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
 		User.findOne({ email: req.body.adminuseremail }, function(error, result){
 			if(result){
 				if(result.admin){
@@ -32,7 +33,7 @@ router.post('/users', function(req, res){
 });
 
 router.post('/admins', function(req, res){
-	if(req.headers.origin == allowedOrigin){
+	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
 		User.findOne({ email: req.body.adminuseremail }, function(error, result){
 			if(result){
 				if(result.admin){
@@ -60,7 +61,7 @@ router.post('/admins', function(req, res){
 })
 
 router.post('/superadmins', function(req, res){
-	if(req.headers.origin == allowedOrigin){
+	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
 		User.findOne({ email: req.body.adminuseremail }, function(error, result){
 			if(result){
 				if(result.admin){
@@ -81,7 +82,7 @@ router.post('/superadmins', function(req, res){
 			} else {
 				res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
 			}
-		})	
+		})
 	} else {
 		res.status(200).send({auth: false, message: "Unauthorized"});
 	}

@@ -7,9 +7,10 @@ const transport = require('../plugins/mailtransporter');
 //Model Imports
 const User = require("../models/user");
 var allowedOrigin = process.env.NODE_ENV == "production" ? process.env.FRONTENDURL : "http://localhost:8080";
+var allowedHost = process.env.NODE_ENV == "production" ? process.env.SITE : "http://localhost:3000";
 
 router.post('/verify', function(req, res){
-	if(req.headers.origin == allowedOrigin){
+	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
 		User.findOne({ email: req.body.email }, function(error, result){
 			if(result){
 				jwt.verify(req.body.token, process.env.TOKENSECRET, function(error, decoded){
@@ -33,7 +34,7 @@ router.post('/verify', function(req, res){
 })
 
 router.post('/changepassword', function(req, res){
-	if(req.headers.origin == allowedOrigin){
+	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
 		User.findOne({ email: req.body.email }, function(error, result){
 			if(result){
 				if(result.password != null && req.body.oldpassword != null){
@@ -64,7 +65,7 @@ router.post('/changepassword', function(req, res){
 });
 
 router.post('/delete', function(req, res){
-	if(req.headers.origin == allowedOrigin){
+	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
 		User.findOne({ email: req.body.email }, function(error, result){
 			if(result){
 				if(result.password != null && req.body.pass != null){
