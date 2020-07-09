@@ -11,9 +11,10 @@ const SpamUser = require("../models/spamUser");
 const InvitedUser = require("../models/invitedUser");
 
 var allowedOrigin = process.env.NODE_ENV == "production" ? process.env.FRONTENDURL : "http://localhost:8080";
+var allowedHost = process.env.NODE_ENV == "production" ? process.env.SITE : "http://localhost:3000";
 
 router.post('/user', function(req, res){
-	if(req.headers.origin == allowedOrigin){
+	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
 		User.findOne({ email: req.body.adminuseremail }, function(error, result){
 			if(result){
 					if(result.admin){

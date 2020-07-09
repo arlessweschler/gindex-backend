@@ -7,9 +7,10 @@ const User = require("../models/user");
 const InvitedUser = require("../models/invitedUser");
 
 var allowedOrigin = process.env.NODE_ENV == "production" ? process.env.FRONTENDURL : "http://localhost:8080";
+var allowedHost = process.env.NODE_ENV == "production" ? process.env.SITE : "http://localhost:3000";
 
 router.post('/user', function(req, res){
-	if(req.headers.origin == allowedOrigin){
+	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
 		InvitedUser.findOne({ email: req.body.email, post: "User" }, function(error, result){
 			if(result){
 				res.status(200).send({ auth: false, registered: true, message: 'User is Already Invited. Do not Send Another Time.'});
@@ -74,7 +75,7 @@ router.post('/user', function(req, res){
 })
 
 router.post('/admin', function(req, res){
-	if(req.headers.origin == allowedOrigin){
+	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
 		InvitedUser.findOne({ email: req.body.email, post: "Admin" }, function(error, result){
 			if(result){
 				res.status(200).send({ auth: false, registered: true, message: 'User is Already Invited. Do not Send Another Time.'});
@@ -143,7 +144,7 @@ router.post('/admin', function(req, res){
 })
 
 router.post('/superadmin', function(req, res){
-	if(req.headers.origin == allowedOrigin){
+	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
 		InvitedUser.findOne({ email: req.body.email, post: "SuperAdmin"}, function(error,result){
 			if(result){
 				res.status(200).send({ auth: false, registered: true, message: 'User is Already Invited. Do not Send Another Time.'});
