@@ -11,6 +11,10 @@ const spamUserSchema = {
     unique: true,
     lowercase: true
   },
+	post: {
+    type: String,
+    required: true
+  },
 	flaggedby: {
     type: String,
     required: true,

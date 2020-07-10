@@ -65,6 +65,7 @@ router.post('/user', function(req, res){
 																										const newSpamUser = new SpamUser({
 																											name: req.body.name,
 																											email: req.body.email,
+																											post: "User",
 																											reason: "His Email Looks Like a Spam",
 																											flaggedby: req.body.adminuseremail
 																										})

@@ -187,7 +187,7 @@ router.post('/superadmins', function(req, res){
 })
 
 router.use('/pending', require('./pending'));
-router.use('/spam', require('./spam'));
+router.use('/spam', require('./getspam'));
 
 
 module.exports = router;
