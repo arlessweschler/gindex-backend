@@ -14,7 +14,7 @@ router.post('/user', function(req, res){
   if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
     User.findOne({ email: req.body.adminuseremail }, function(error, user){
       if(user){
-        bcrypt.compare(req.body.password, user.password, function(req, synced){
+        bcrypt.compare(req.body.password, user.password, function(err, synced){
           if(synced){
             if(user.admin){
               User.findOne({ email: req.body.email }, function(error, resultUser){
