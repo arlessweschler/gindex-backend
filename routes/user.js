@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const transport = require('../plugins/mailtransporter');
+const selfDeleteEmail = require('../templates/delete/users/toSelf');
 
 //Model Imports
 const User = require("../models/user");
@@ -76,12 +77,12 @@ router.post('/delete', function(req, res){
 									res.status(200).send({ auth: true, registered: true, deleted: false, message: "Some Error Pinging the Servers. Try Again Later." });
 								} else {
 									const deleteMessage = {
-										 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+										 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
 										 to: req.body.email,
 										 bcc: req.body.ADMINEMAIL,
-										 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-										 subject: 'Account has been Deleted.', // Subject line
-										 html: `<p>Your Account has been Deleted.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You.</p>` // Plain text body
+										 replyTo: process.env.REPLYTOMAIL,
+										 subject: 'Account has been Deleted.',
+										 html: selfDeleteEmail(result)
 									};
 									transport.sendMail(deleteMessage, function(error, info){
 										if(error){

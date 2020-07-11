@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const transport = require('../plugins/mailtransporter');
+const userInviteTemplate = require('../templates/invite/toUsers');
 
 //Model Imports
 const User = require("../models/user");
@@ -42,11 +43,11 @@ router.post('/user', function(req, res){
 											res.status(200).send({ auth: false, registered: true, message: "Error Processing Your Request." })
 										} else {
 											const message = {
-												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
 												 to: req.body.email,
 												 replyTo: process.env.REPLYTOMAIL,
-												 subject: `You have been Invited to ${process.env.FRONTENDSITENAME}`, // Subject line
-												 html: `<p>You Have been Invited for Admin by - ${req.body.adminuseremail}. His Message to You - ${req.body.message}.</p><p> If You Accept this Invite, then go to MySettings Page and Request Admin Status.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+												 subject: `You have been Invited to ${process.env.FRONTENDSITENAME}`,
+												 html: userInviteTemplate(doc, req.body.adminuseremail, "User", req.body.message)
 											};
 											transport.sendMail(message, function(err, info){
 												if(err){
@@ -104,11 +105,11 @@ router.post('/admin', function(req, res){
 														res.status(200).send({ auth: false, registered: true, message: "Error Processing Your Request." })
 													} else {
 														const message = {
-															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
 															 to: req.body.email,
 															 replyTo: process.env.REPLYTOMAIL,
-															 subject: 'You have been Invited for Admin Post', // Subject line
-															 html: `<p>You Have been Invited for Admin by - ${req.body.adminuseremail}. His Message to You - ${req.body.message}.</p><p> If You Accept this Invite, then go to MySettings Page and Request Admin Status.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+															 subject: 'You have been Invited for Admin Post',
+															 html: userInviteTemplate(doc, req.body.adminuseremail, "Admin", req.body.message)
 														};
 														transport.sendMail(message, function(err, info){
 															if(err){
@@ -171,11 +172,11 @@ router.post('/superadmin', function(req, res){
 														res.status(200).send({ auth: false, registered: true, message: "Error Processing Your Request." })
 													} else {
 														const message = {
-															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
 															 to: req.body.email,
 															 replyTo: process.env.REPLYTOMAIL,
-															 subject: 'You have been Invited for SuperAdmin Post', // Subject line
-															 html: `<p>You Have been Invited for SuperAdmin by - ${req.body.adminuseremail}. His Message to You - ${req.body.message}.</p><p> If You Accept this Invite, then go to MySettings Page and Request SuperAdmin Status.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+															 subject: 'You have been Invited for SuperAdmin Post',
+															 html: userInviteTemplate(doc, req.body.adminuseremail, "Super Admin", req.body.message)
 														};
 														transport.sendMail(message, function(err, info){
 															if(err){

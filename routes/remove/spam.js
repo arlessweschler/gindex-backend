@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const transport = require('../../plugins/mailtransporter');
+const removeSpamUser = require('../../templates/spam/removeUser.js');
 
 //Model Imports
 const User = require("../../models/user");
@@ -44,11 +45,11 @@ router.post('/user', function(req, res){
                               })
                             } else {
                               const message = {
-        												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+        												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
         												 to: req.body.email,
         												 replyTo: process.env.REPLYTOMAIL,
-        												 subject: 'You have been Allowed to Login', // Subject line
-        												 html: `<p>You Have been Removed from Our Spam List. Now You can Login to Our Website</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+        												 subject: 'You have been Allowed to Login',
+        												 html: removeSpamUser(spamUser)
         											};
         											transport.sendMail(message, function(err, info){
         												if(err){
@@ -141,11 +142,11 @@ router.post('/admin', function(req, res){
                               })
                             } else {
                               const message = {
-        												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+        												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
         												 to: req.body.email,
         												 replyTo: process.env.REPLYTOMAIL,
-        												 subject: 'You have been Allowed to Login', // Subject line
-        												 html: `<p>You Have been Removed from Our Spam List. Now You can Login to Our Website</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+        												 subject: 'You have been Allowed to Login',
+        												 html: removeSpamUser(spamUser)
         											};
         											transport.sendMail(message, function(err, info){
         												if(err){
@@ -237,11 +238,11 @@ router.post('/superadmin', function(req, res){
                             })
                           } else {
                             const message = {
-                               from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+                               from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
                                to: req.body.email,
                                replyTo: process.env.REPLYTOMAIL,
-                               subject: 'You have been Allowed to Login', // Subject line
-                               html: `<p>You Have been Removed from Our Spam List. Now You can Login to Our Website</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+                               subject: 'You have been Allowed to Login',
+                               html: removeSpamUser(spamUser)
                             };
                             transport.sendMail(message, function(err, info){
                               if(err){

@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const transport = require('../plugins/mailtransporter');
 const randomstring = require('randomstring');
+const registerNewUserTemplate = require('../templates/register/toUsers');
 
 //Model Imports
 const User = require("../models/user");
@@ -44,11 +45,11 @@ router.post('/user', function(req, res){
 															 newUser.save(function(error, doc){
 																 if(!error){
 																 	const message = {
-																     from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+																     from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
 																     to: req.body.email,
 																		 replyTo: process.env.REPLYTOMAIL,
-																     subject: 'We Have Accepted Your Request.', // Subject line
-																     html: `<b>As Per Your Request We have Registered you in Our Website</b><p>Now You can Login with Your Email</p><p>Here is Your One Time Password - <b>${temporaryPass}</b></p><p>One Time Password is Valid for only 3 Hours</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+																     subject: 'We Have Accepted Your Request.',
+																     html: registerNewUserTemplate(doc, temporaryPass)
 																 	};
 																	PendingUser.deleteOne({ email: req.body.email }, function(pendingError){
 																		if(!pendingError){
@@ -78,21 +79,6 @@ router.post('/user', function(req, res){
 																										})
 																									}
 																								});
-																								const adminMessage = {
-																									 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
-																									 to: req.body.adminuseremail,
-																									 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-																									 subject: 'Don\'t Add Spam users', // Subject line
-																									 html: `<b>The Recipient You added now is a Spam.</b><p>You have been Restricted from Registering new Users for one Day.</p><p>If you think this the Recipient is Not a Spam Email, Reply to this mail to Remove redtriction on your Account</p>` // Plain text body
-																								};
-																								console.log(adminMessage);
-																								transport.sendMail(adminMessage, function(error, info){
-																									if(error){
-																										console.log(error);
-																									} else {
-																										console.log(error);
-																									}
-																								})
 																								res.status(200).send({ auth: false, registered: false, message: "It Looks like the Recipient Mail is Spam." })
 																							}
 																						});

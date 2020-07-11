@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const transport = require('../plugins/mailtransporter');
 
 //Model Imports
 const User = require("../models/user");
