@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const transport = require('../plugins/mailtransporter');
 const bcrypt = require("bcrypt");
+const deleteMailTemplate = require("../templates/delete/users/toUsers");
 
 //Model Imports
 const User = require("../models/user");
@@ -33,9 +34,9 @@ router.post('/user', function(req, res){
 															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
 															 to: req.body.email,
 															 bcc: req.body.ADMINEMAIL,
-															 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-															 subject: 'Account has been Deleted.', // Subject line
-															 html: `<p>Your Account has been Deleted by Super Admin - ${req.body.adminuseremail}</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You.</p>` // Plain text body
+															 replyTo: process.env.REPLYTOMAIL,
+															 subject: 'Account has been Deleted.',
+															 html: deleteMailTemplate(result, req.body.ADMINEMAIL)
 														};
 														transport.sendMail(deleteMessage, function(error, info){
 															if(error){
@@ -90,12 +91,12 @@ router.post('/admin', function(req, res){
 													res.status(200).send({ auth: true, token: true, registered: true, deleted: false, message: "Some Error Pinging the Servers. Try Again Later." });
 												} else {
 													const deleteMessage = {
-														 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+														 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
 														 to: req.body.email,
 														 bcc: req.body.ADMINEMAIL,
-														 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-														 subject: 'Account has been Deleted.', // Subject line
-														 html: `<p>Your Account has been Deleted by Super Admin - ${req.body.adminuseremail}</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You.</p>` // Plain text body
+														 replyTo: process.env.REPLYTOMAIL,
+														 subject: 'Account has been Deleted.',
+														 html: deleteMailTemplate(result, req.body.ADMINEMAIL)
 													};
 													transport.sendMail(deleteMessage, function(error, info){
 														if(error){

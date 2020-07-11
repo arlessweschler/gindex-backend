@@ -65,18 +65,18 @@ router.post('/user', function(req, res){
 									newPendingUser.save(function(error, doc){
 										if(!error){
 											const adminMessage = {
-												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
 												 to: adminEmails,
 												 replyTo: process.env.REPLYTOMAIL,
-												 subject: `${process.env.FRONTENDSITENAME} - Access Request`, // Subject line
-												 html: newRequestToAdminTemplate(req.body) // Plain text body
+												 subject: `${process.env.FRONTENDSITENAME} - Access Request`,
+												 html: newRequestToAdminTemplate(req.body)
 											};
 											const userMessage = {
-												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
 												 to: req.body.email,
 												 replyTo: process.env.REPLYTOMAIL,
-												 subject: 'Your Request is Pending Confirmation.', // Subject line
-												 html: newRequestToUserTemplate(req.body), // Plain text body
+												 subject: 'Your Request is Pending Confirmation.',
+												 html: newRequestToUserTemplate(req.body),
 											};
 											transport.sendMail(adminMessage, function(error, info){
 												if(error){
@@ -263,7 +263,7 @@ router.post('/superadmin', function(req, res){
 											});
 										} else {
 											const adminMessage = {
-												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
 												 to: adminEmails,
 												 replyTo: process.env.REPLYTOMAIL,
 												 subject: `${process.env.FRONTENDSITENAME} - Admin Request`,

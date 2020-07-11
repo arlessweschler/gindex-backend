@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const transport = require('../../plugins/mailtransporter')
 const bcrypt = require("bcrypt");
+const verifiedUserTemplate = require('../../templates/register/toVerifiedUser');
+const promotedUserTemplate = require('../../templates/register/toPromotedUsers');
 
 //Model Imports
 const User = require("../../models/user");
@@ -27,12 +29,12 @@ router.post('/otp', function(req, res){
 										User.updateOne({ email: req.body.email }, {$set: { password: hashedPass, temppassword: null, verified: true }}, function(error){
 											if(!error){
 												const otpMessage = {
-													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
 													 to: req.body.email,
 													 bcc: process.env.ADMINEMAIL,
-													 replyTo: process.env.REPLYTOMAIL,        // List of recipients
-													 subject: 'Account Verified', // Subject line
-													 html: `<b>Your email ${req.body.email} has been Verified. Now you can Login with Your Password.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+													 replyTo: process.env.REPLYTOMAIL,
+													 subject: 'Account Verified',
+													 html: verifiedUserTemplate(result)
 												};
 												transport.sendMail(otpMessage, function(err, info){
 													if(err){
@@ -89,12 +91,12 @@ router.post('/admin', function(req, res){
 													User.updateOne({ email: req.body.email }, { $set: { admin: true, role: "Admin" } }, function(error){
 														if(!error){
 															const promoteMessage = {
-																 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+																 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
 																 to: req.body.email,
 																 bcc: req.body.ADMINEMAIL,
-																 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-																 subject: 'Account Promoted to Admin Status.', // Subject line
-																 html: `<p>Your Account has been Promoted to Admin by Super Admin - ${req.body.adminuseremail}, Please Use your Admin Powers Wisely.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+																 replyTo: process.env.REPLYTOMAIL,
+																 subject: 'Account Promoted to Admin Status.',
+																 html: promotedUserTemplate(result, req.body.adminuseremail, "Admin")
 															};
 															transport.sendMail(promoteMessage, function(error, info){
 																if(error){
@@ -174,12 +176,12 @@ router.post('/superadmin', function(req, res){
 																	res.status(200).send({ auth: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
 																} else {
 																	const promoteMessage = {
-																		 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+																		 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
 																		 to: req.body.email,
 																		 bcc: req.body.ADMINEMAIL,
-																		 replyTo: process.env.REPLYTOMAIL,         // List of recipients
-																		 subject: 'Account Promoted to Super Admin Status.', // Subject line
-																		 html: `<p>Your Account has been Promoted to Super Admin by Super Admin - ${req.body.adminuseremail}, Please Use your Super Admin Powers Wisely.</p><p>Any Issues, Reply to this Mail, Our Admins will Contact You</p>` // Plain text body
+																		 replyTo: process.env.REPLYTOMAIL,
+																		 subject: 'Account Promoted to Super Admin Status.',
+																		 html: promotedUserTemplate(result, req.body.adminuseremail, "Super Admin")
 																	};
 																	transport.sendMail(promoteMessage, function(error, info){
 																		if(error){
