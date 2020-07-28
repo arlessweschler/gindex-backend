@@ -31,7 +31,6 @@ router.post('/generate', function(req, res){
 });
 
 router.post('/checkmail', function(req, res){
-	console.log(req);
 	SpamUser.findOne({ email: req.body.email }, function(err, result){
 		if(result){
 			res.status(200).send({ auth: false, user: false, status: "Spammed User" })

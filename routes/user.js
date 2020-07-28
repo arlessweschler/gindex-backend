@@ -32,6 +32,47 @@ router.post('/verify', function(req, res){
 	} else {
 		res.status(200).send({auth: false, message: "Unauthorized"});
 	}
+});
+
+router.post('/media/transmit', function(req, res){
+	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
+		User.findOne({ email: req.body.email }, function(error, result){
+			if(result){
+				jwt.verify(req.body.token, process.env.TOKENSECRET, function(error, decoded){
+					if(decoded){
+						let mediaToken = jwt.sign({ result }, process.env.TOKENSECRET, {expiresIn: 10800});
+						res.status(200).send({ auth: true, registered: true, token: mediaToken });
+					} else {
+						res.status(200).send({auth: false, registered: false, tokenuser: false});
+					}
+				})
+			} else {
+				res.status(200).send({auth: false, registered: false, tokenuser: false});
+			}
+		})
+	} else {
+		res.status(200).send({auth: false, message: "Unauthorized"});
+	}
+})
+
+router.post('/media/verify', function(req, res){
+	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
+		User.findOne({ email: req.body.email }, function(error, result){
+			if(result){
+				jwt.verify(req.body.token, process.env.TOKENSECRET, function(error, decoded){
+					if(decoded){
+						res.status(200).send({ auth: true, registered: true, tokenuser: decoded });
+					} else {
+						res.status(200).send({auth: false, registered: false, tokenuser: null});
+					}
+				});
+			} else {
+				res.status(200).send({auth: false, registered: false, tokenuser: false});
+			}
+		})
+	} else {
+		res.status(200).send({auth: false, message: "Unauthorized"});
+	}
 })
 
 router.post('/changepassword', function(req, res){
