@@ -40,7 +40,7 @@ router.post('/media/transmit', function(req, res){
 			if(result){
 				jwt.verify(req.body.token, process.env.TOKENSECRET, function(error, decoded){
 					if(decoded){
-						let mediaToken = jwt.sign({ result }, process.env.TOKENSECRET, {expiresIn: 3600});
+						let mediaToken = jwt.sign({ result }, process.env.TOKENSECRET, {expiresIn: 30});
 						res.status(200).send({ auth: true, registered: true, token: mediaToken });
 					} else {
 						res.status(200).send({auth: false, registered: false, tokenuser: false});
