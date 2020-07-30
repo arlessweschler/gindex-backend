@@ -10,12 +10,8 @@ const User = require("../../models/user");
 const PendingUser = require("../../models/pendingUser");
 const InvitedUser = require("../../models/invitedUser");
 
-var allowedOrigin = process.env.NODE_ENV == "production" ? process.env.FRONTENDURL : "http://localhost:8080";
-var allowedHost = process.env.NODE_ENV == "production" ? process.env.SITE : "http://localhost:3000";
-
 router.post('/otp', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		User.findOne({ email: req.body.email }, function(error, result){
+	User.findOne({ email: req.body.email }, function(error, result){
 			if(result){
 				var tempPassIsThere = result.temppassword != null ? true : false;
 				var passNotThere = result.password == null ? true : false;
@@ -66,14 +62,10 @@ router.post('/otp', function(req, res){
 				res.status(200).send({ auth: false, registered: false, changed: false, message: "Bad Request" })
 			}
 		})
-	} else {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 });
 
 router.post('/admin', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		PendingUser.findOne({ email: req.body.email, post: "Admin" }, function(error, result){
+	PendingUser.findOne({ email: req.body.email, post: "Admin" }, function(error, result){
 			if(result){
 				User.findOne({ email: req.body.adminuseremail }, function(error, result){
 					if(result){
@@ -147,14 +139,10 @@ router.post('/admin', function(req, res){
 				res.status(200).send({ auth: true, changed: false, message: "A User has to Specifically Request to Become a Admin to Promote Him. This is to Ensure Participation from Both Sides." });
 			}
 		})
-	} else {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 });
 
 router.post('/superadmin', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		PendingUser.findOne({ email: req.body.email, post: "SuperAdmin" }, function(error, result){
+	PendingUser.findOne({ email: req.body.email, post: "SuperAdmin" }, function(error, result){
 			if(result){
 				User.findOne({ email: req.body.adminuseremail }, function(error, result){
 					if(result){
@@ -234,9 +222,6 @@ router.post('/superadmin', function(req, res){
 				res.status(200).send({ auth: true, changed: false, message: "A User has to Specifically Request to Become a Super Admin to Promote Him. This is to Ensure Participation from Both Sides." });
 			}
 		})
-	} else  {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 })
 
 module.exports = router;

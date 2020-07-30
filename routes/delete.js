@@ -7,12 +7,8 @@ const deleteMailTemplate = require("../templates/delete/users/toUsers");
 //Model Imports
 const User = require("../models/user");
 
-var allowedOrigin = process.env.NODE_ENV == "production" ? process.env.FRONTENDURL : "http://localhost:8080";
-var allowedHost = process.env.NODE_ENV == "production" ? process.env.SITE : "http://localhost:3000";
-
 router.post('/user', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		User.findOne({ email: req.body.adminuseremail }, function(error, result){
+	User.findOne({ email: req.body.adminuseremail }, function(error, result){
 			if(result){
 				if(result.admin){
 					if(result.password != null && req.body.adminpass != null){
@@ -68,14 +64,10 @@ router.post('/user', function(req, res){
 				res.status(200).send({ auth: false, registered: false, deleted: false, message: "BAD REQUEST" });
 			}
 		})
-	} else {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 });
 
 router.post('/admin', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		User.findOne({ email: req.body.adminuseremail }, function(error, result){
+	User.findOne({ email: req.body.adminuseremail }, function(error, result){
 			if(result){
 				if(result.admin && result.superadmin){
 					if(result.password != null && req.body.adminpass != null){
@@ -127,9 +119,6 @@ router.post('/admin', function(req, res){
 				res.status(200).send({ auth: false, registered: false, deleted: false, message: "BAD REQUEST" });
 			}
 		})
-	}	else {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 })
 
 module.exports = router;
