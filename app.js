@@ -16,7 +16,7 @@ app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
-var whitelist = process.env.NODE_ENV == "production" ? process.env.frontendUrl : process.env.frontendUrl.split(",");
+var whitelist = process.env.FRONTENDURL.split(",");
 console.log(whitelist);
 var corsOptions = {
   origin: function (origin, callback) {
