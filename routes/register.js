@@ -11,12 +11,8 @@ const PendingUser = require("../models/pendingUser");
 const SpamUser = require("../models/spamUser");
 const InvitedUser = require("../models/invitedUser");
 
-var allowedOrigin = process.env.NODE_ENV == "production" ? process.env.FRONTENDURL : "http://localhost:8080";
-var allowedHost = process.env.NODE_ENV == "production" ? process.env.SITE : "http://localhost:3000";
-
 router.post('/user', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		User.findOne({ email: req.body.adminuseremail }, function(error, result){
+	User.findOne({ email: req.body.adminuseremail }, function(error, result){
 			if(result){
 					if(result.admin){
 						if(result.password != null && req.body.adminpass != null){
@@ -118,9 +114,6 @@ router.post('/user', function(req, res){
 				res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
 			}
 		})
-	} else {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 });
 
 router.post('/rootuser', function(req, res){

@@ -11,8 +11,7 @@ var allowedOrigin = process.env.NODE_ENV == "production" ? process.env.FRONTENDU
 var allowedHost = process.env.NODE_ENV == "production" ? process.env.SITE : "http://localhost:3000";
 
 router.post('/verify', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		User.findOne({ email: req.body.email }, function(error, result){
+	User.findOne({ email: req.body.email }, function(error, result){
 			if(result){
 				jwt.verify(req.body.token, process.env.TOKENSECRET, function(error, decoded){
 					if(decoded){
@@ -29,14 +28,10 @@ router.post('/verify', function(req, res){
 				res.status(200).send({auth: false, registered: false, tokenuser: false});
 			}
 		})
-	} else {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 });
 
 router.post('/media/transmit', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		User.findOne({ email: req.body.email }, function(error, result){
+	User.findOne({ email: req.body.email }, function(error, result){
 			if(result){
 				jwt.verify(req.body.token, process.env.TOKENSECRET, function(error, decoded){
 					if(decoded){
@@ -50,14 +45,10 @@ router.post('/media/transmit', function(req, res){
 				res.status(200).send({auth: false, registered: false, tokenuser: false});
 			}
 		})
-	} else {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 })
 
 router.post('/media/verify', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		User.findOne({ email: req.body.email }, function(error, result){
+	User.findOne({ email: req.body.email }, function(error, result){
 			if(result){
 				jwt.verify(req.body.token, process.env.TOKENSECRET, function(error, decoded){
 					if(decoded){
@@ -70,14 +61,10 @@ router.post('/media/verify', function(req, res){
 				res.status(200).send({auth: false, registered: false, tokenuser: false});
 			}
 		})
-	} else {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 })
 
 router.post('/changepassword', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		User.findOne({ email: req.body.email }, function(error, result){
+	User.findOne({ email: req.body.email }, function(error, result){
 			if(result){
 				if(result.password != null && req.body.oldpassword != null){
 					bcrypt.compare(req.body.oldpassword, result.password, function(err, synced){
@@ -101,14 +88,10 @@ router.post('/changepassword', function(req, res){
 				res.status(200).send({ auth: false, registered: false, changed: false, message: "Bad Request" })
 			}
 		})
-	} else {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 });
 
 router.post('/delete', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		User.findOne({ email: req.body.email }, function(error, result){
+	User.findOne({ email: req.body.email }, function(error, result){
 			if(result){
 				if(result.password != null && req.body.pass != null){
 					bcrypt.compare(req.body.pass, result.password, function(err, synced){
@@ -146,9 +129,6 @@ router.post('/delete', function(req, res){
 				res.status(200).send({ auth: false, registered: false, deleted: false, message: "BAD REQUEST" });
 			}
 		})
-	} else {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 });
 
 module.exports = router;

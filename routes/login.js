@@ -12,8 +12,7 @@ var allowedOrigin = process.env.NODE_ENV == "production" ? process.env.FRONTENDU
 var allowedHost = process.env.NODE_ENV == "production" ? process.env.SITE : "http://localhost:3000";
 
 router.post('/', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		PendingUser.findOne({ email: req.body.email, post: "User" }, function(error, result){
+	PendingUser.findOne({ email: req.body.email, post: "User" }, function(error, result){
 			if(result){
 				res.status(200).send({ auth: false, registered: true, token: null, message: "Your Email is Currently Pending Request. Please Wait till Accepting." });
 			} else {
@@ -56,9 +55,6 @@ router.post('/', function(req, res){
 				})
 			}
 		})
-	} else {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 });
 
 module.exports = router;

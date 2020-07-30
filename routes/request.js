@@ -12,12 +12,8 @@ const PendingUser = require("../models/pendingUser");
 const SpamUser = require("../models/spamUser");
 const InvitedUser = require("../models/invitedUser");
 
-var allowedOrigin = process.env.NODE_ENV == "production" ? process.env.FRONTENDURL : "http://localhost:8080";
-var allowedHost = process.env.NODE_ENV == "production" ? process.env.SITE : "http://localhost:3000";
-
 router.post('/user', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		PendingUser.findOne({ email: req.body.email }, function(pendingError, pendingResult){
+	PendingUser.findOne({ email: req.body.email }, function(pendingError, pendingResult){
 			if(pendingResult){
 				res.status(200).send({auth: false, registered: false, message: "You Have Already Requested to Join. Please Wait While We Accept." });
 			} else {
@@ -112,17 +108,10 @@ router.post('/user', function(req, res){
 				})
 			}
 		})
-	} else {
-		res.status(200).send({
-			auth: false,
-			message: "Unauthorized"
-		});
-	}
 })
 
 router.post('/admin', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		PendingUser.findOne({ email: req.body.email, post: "Admin" }, function(error, result){
+	PendingUser.findOne({ email: req.body.email, post: "Admin" }, function(error, result){
 			if(result){
 				res.status(200).send({
 					auth: true,
@@ -214,17 +203,10 @@ router.post('/admin', function(req, res){
 				})
 			}
 		})
-	} else {
-		res.status(200).send({
-			auth: false,
-			message: "Unauthorized"
-		});
-	}
 })
 
 router.post('/superadmin', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		PendingUser.findOne({ email: req.body.email, post: "SuperAdmin" }, function(error, result){
+	PendingUser.findOne({ email: req.body.email, post: "SuperAdmin" }, function(error, result){
 			if(result){
 				res.status(200).send({
 					auth: true,
@@ -316,12 +298,6 @@ router.post('/superadmin', function(req, res){
 				})
 			}
 		})
-	} else {
-		res.status(200).send({
-			auth: false,
-			message: "Unauthorized"
-		});
-	}
 })
 
 router.use('/remove', require('./remove'));

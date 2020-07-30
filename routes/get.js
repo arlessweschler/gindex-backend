@@ -7,12 +7,8 @@ const PendingUser = require("../models/pendingUser");
 const SpamUser = require("../models/spamUser");
 const InvitedUser = require("../models/invitedUser");
 
-var allowedOrigin = process.env.NODE_ENV == "production" ? process.env.FRONTENDURL : "http://localhost:8080";
-var allowedHost = process.env.NODE_ENV == "production" ? process.env.SITE : "http://localhost:3000";
-
 router.post('/all', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		User.findOne({ email: req.body.email }, function(error, result){
+	User.findOne({ email: req.body.email }, function(error, result){
 			if(result){
 				if(result.admin){
 					if(result.superadmin){
@@ -50,14 +46,10 @@ router.post('/all', function(req, res){
 				res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" });
 			}
 		})
-	} else {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 })
 
 router.post('/users', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		User.findOne({ email: req.body.email }, function(error, result){
+	User.findOne({ email: req.body.email }, function(error, result){
 			if(result){
 				if(result.admin){
 					User.find({ admin: false, superadmin: false }, function(error, result){
@@ -91,14 +83,10 @@ router.post('/users', function(req, res){
 				res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" });
 			}
 		})
-	} else {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 })
 
 router.post('/admins', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		User.findOne({ email: req.body.email }, function(error, result){
+	User.findOne({ email: req.body.email }, function(error, result){
 			if(result){
 				if(result.admin){
 					if(result.superadmin){
@@ -136,14 +124,10 @@ router.post('/admins', function(req, res){
 				res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" });
 			}
 		})
-	} else {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 })
 
 router.post('/superadmins', function(req, res){
-	if(req.headers.origin == allowedOrigin || req.headers.origin == allowedHost){
-		User.findOne({ email: req.body.email }, function(error, result){
+	User.findOne({ email: req.body.email }, function(error, result){
 			if(result){
 				if(result.admin){
 					if(result.superadmin){
@@ -181,9 +165,6 @@ router.post('/superadmins', function(req, res){
 				res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" });
 			}
 		})
-	} else {
-		res.status(200).send({auth: false, message: "Unauthorized"});
-	}
 })
 
 router.use('/pending', require('./pending'));
