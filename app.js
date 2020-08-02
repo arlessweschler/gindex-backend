@@ -9,27 +9,11 @@ const keepAlive = require("./plugins/keepAlive");
 const deletePlugin = require('./plugins/deleteAll');
 const app = express();
 
-deletePlugin();
-keepAlive();
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
-
-var whitelist = process.env.FRONTENDURL.split(",");
-console.log(whitelist);
-var corsOptions = {
-  origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1) {
-      callback(null, true)
-    } else {
-      callback(new Error('Not allowed by CORS'))
-    }
-  }
-}
-
-//Cross Origin Requests
-app.use(cors(corsOptions));
+app.use(cors());
 
 mongoose.connect(process.env.DBURL, {useNewUrlParser: true,  useUnifiedTopology: true, useCreateIndex: true})
 //Routes
@@ -44,6 +28,8 @@ app.use('/delete', require('./routes/delete'));
 app.use('/get', require('./routes/get'))
 app.use('/spam', require('./routes/spam'));
 
+deletePlugin();
+keepAlive();
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, console.log('Server Started on ' + PORT ));
