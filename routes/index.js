@@ -7,6 +7,7 @@ const User = require("../models/user");
 const PendingUser = require("../models/pendingUser");
 const SpamUser = require("../models/spamUser");
 const InvitedUser = require("../models/invitedUser");
+const checkOrigin = require("../plugins/checkOrigin");
 
 router.get('/', function(req, res){
 	User.findOne({ superadmin: true }, function(error, result){
@@ -31,29 +32,33 @@ router.post('/generate', function(req, res){
 });
 
 router.post('/checkmail', function(req, res){
-	SpamUser.findOne({ email: req.body.email }, function(err, result){
-		if(result){
-			res.status(200).send({ auth: false, user: false, status: "Spammed User" })
-		} else {
-			PendingUser.findOne({ email: req.body.email }, function(err ,result){
-				if(result){
-					res.status(200).send({ auth: false, user: false, status: "Pending Confirmation from Admins." })
-				} else {
-					User.findOne({ email: req.body.email }, function(err, result){
-						if(result){
-							if(result.verified){
-								res.status(200).send({ auth: true, user: true, status: "User Present & Verified" })
+	if(checkOrigin(req.headers.origin)){
+		SpamUser.findOne({ email: req.body.email }, function(err, result){
+			if(result){
+				res.status(200).send({ auth: false, user: false, status: "Spammed User" })
+			} else {
+				PendingUser.findOne({ email: req.body.email }, function(err ,result){
+					if(result){
+						res.status(200).send({ auth: false, user: false, status: "Pending Confirmation from Admins." })
+					} else {
+						User.findOne({ email: req.body.email }, function(err, result){
+							if(result){
+								if(result.verified){
+									res.status(200).send({ auth: true, user: true, status: "User Present & Verified" })
+								} else {
+									res.status(200).send({ auth: false, user:true, status: "User Present & Not Verified" })
+								}
 							} else {
-								res.status(200).send({ auth: false, user:true, status: "User Present & Not Verified" })
+								res.status(200).send({ auth: false, user: false, status: "User Not Present" })
 							}
-						} else {
-							res.status(200).send({ auth: false, user: false, status: "User Not Present" })
-						}
-					})
-				}
-			})
-		}
-	})
+						})
+					}
+				})
+			}
+		})
+	} else {
+		res.status(200).send({ auth: false, message: "UNAUTHORIZED" })
+	}
 })
 
 module.exports = router;
