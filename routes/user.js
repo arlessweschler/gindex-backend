@@ -3,8 +3,10 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const transport = require('../plugins/mailtransporter');
+const randomstring = require('randomstring');
 const checkOrigin = require("../plugins/checkOrigin");
 const selfDeleteEmail = require('../templates/delete/users/toSelf');
+const forgotPassEmail = require('../templates/request/existing/forgotPass');
 
 //Model Imports
 const User = require("../models/user");
@@ -104,6 +106,47 @@ router.post('/changepassword', function(req, res){
 		res.status(200).send({ auth: false, message: "UNAUTHORIZED" })
 	}
 });
+
+router.post('/forgotpass', function(req, res){
+	if(checkOrigin(req.headers.origin)){
+		User.findOne({ email: req.body.email }, function(error, result){
+			if(result){
+				var temporaryPass = randomstring.generate({ length: 8, charset: 'alphanumeric' });
+				bcrypt.hash(temporaryPass, 10, function(err, hashedPass){
+					if(hashedPass){
+						User.updateOne({ email: req.body.email }, {$set: { password: null, temppassword: hashedPass, verified: false }}, function(error){
+							if(!error){
+								const otpMessage = {
+									from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+									to: req.body.email,
+									replyTo: process.env.REPLYTOMAIL,
+									subject: 'Reset Your Password',
+									html: forgotPassEmail(result, temporaryPass),
+								}
+								transport.sendMail(otpMessage, function(error, info){
+									if(error){
+										console.log(error);
+									} else {
+										console.log(info);
+									}
+								})
+								res.status(200).send({auth: true, registered: true, changed: true, message: "OTP has been Sent to Your Email. Reset Your Password by entering the OTP." })
+							} else {
+								res.status(200).send({ auth: false, registered: false, changed: false, message: "Error Occured While Generating OTP. Please Try Again Later." });
+							}
+						})
+					} else {
+						res.status(200).send({ auth: false, registered: false, changed: false, message: "Error Occured While Generating OTP. Please Try Again Later." });
+					}
+				})
+			} else {
+				res.status(200).send({ auth: false, registered: false, changed: false, message: "Account Doesn't Exists" })
+			}
+		})
+	} else {
+		res.status(200).send({ auth: false, message: "UNAUTHORIZED" })
+	}
+})
 
 router.post('/delete', function(req, res){
 	if(checkOrigin(req.headers.origin)){
