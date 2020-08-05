@@ -123,7 +123,6 @@ router.post('/forgotpass', function(req, res){
 									subject: 'Reset Your Password',
 									html: forgotPassEmail(result, temporaryPass),
 								}
-								console.log(temporaryPass);
 								transport.sendMail(otpMessage, function(error, info){
 									if(error){
 										console.log(error);
