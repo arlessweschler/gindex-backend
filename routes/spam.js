@@ -66,6 +66,88 @@ router.post('/user', function(req, res){
 	}
 })
 
+router.post('/quickadd', function(req, res){
+	if(checkOrigin(req.headers.origin)){
+		User.findOne({ email: req.body.adminuseremail }, function(error, result){
+				if(result){
+					if(result.admin){
+						if(result.superadmin){
+							User.findOne({ email: req.body.email }, function(error, result){
+								if(result){
+									const spamUser = new SpamUser({
+										name: result.name,
+										email: req.body.email,
+										post: "User",
+										flaggedby: req.body.adminuseremail,
+										reason: "Quick Spam Handle - From Frontend"
+									})
+									spamUser.save(function(error, doc){
+										if(error){
+											res.status(200).send({ auth: true, registered: false, message: "Error Processing Request. Try Again Later" });
+										} else {
+											const message = {
+												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+												 to: req.body.email,
+												 replyTo: process.env.REPLYTOMAIL,
+												 subject: 'You Have Been Flagged',
+												 html: spamUserTemplate(doc, req.body.adminuseremail, "Quick Spam Handle - From Frontend")
+											};
+											transport.sendMail(message, function(err, info){
+												if(err){
+													console.log(err);
+												} else {
+													console.log(info);
+												}
+											})
+											res.status(200).send({ auth: true, registered: true, message: 'User has Been Added to Spam User Database.'});
+										}
+									})
+								} else {
+									const spamUser = new SpamUser({
+										name: "Unregistered User",
+										email: req.body.email,
+										post: "User",
+										flaggedby: req.body.adminuseremail,
+										reason: "Quick Spam Handle - From Frontend"
+									})
+									spamUser.save(function(error, doc){
+										if(error){
+											res.status(200).send({ auth: true, registered: false, message: "Error Processing Request. Try Again Later" });
+										} else {
+											const message = {
+												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+												 to: req.body.email,
+												 replyTo: process.env.REPLYTOMAIL,
+												 subject: 'You Have Been Flagged',
+												 html: spamUserTemplate(doc, req.body.adminuseremail, "Quick Spam Handle - From Frontend")
+											};
+											transport.sendMail(message, function(err, info){
+												if(err){
+													console.log(err);
+												} else {
+													console.log(info);
+												}
+											})
+											res.status(200).send({ auth: true, registered: true, message: 'User has Been Added to Spam User Database.'});
+										}
+									})
+								}
+							})
+						} else {
+
+						}
+					} else {
+						res.status(200).send({ auth: false, registered: true, message: "You are Unauthorized" })
+					}
+				} else {
+					res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
+				}
+			})
+	} else {
+		res.status(200).send({ auth: false, message: "UNAUTHORIZED" })
+	}
+})
+
 router.post('/admin', function(req, res){
 	if(checkOrigin(req.headers.origin)){
 		User.findOne({ email: req.body.adminuseremail }, function(error, result){
