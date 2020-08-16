@@ -3,7 +3,6 @@
     "src": "app.js",
     "use": "@now/node-server"
 }],
-
 "routes": [{
     "headers": {
         "Access-Control-Allow-Origin": "*",
@@ -12,5 +11,10 @@
     },
     "src": "/.*",
     "dest": "/app.js"
-}]
+}],
+"functions": {
+  "/app.js": {
+      "includeFiles": "views/**"
+    }
+  }
 }
