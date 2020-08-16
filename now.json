@@ -9,7 +9,7 @@
     "dest": "/app.js"
 }],
 "functions": {
-  "/app.js": {
+  "app.js": {
       "includeFiles": "views/**"
     }
   }
