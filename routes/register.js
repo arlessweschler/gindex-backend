@@ -143,20 +143,20 @@ router.post('/rootuser', function(req, res){
 							})
 							newRootUser.save(function(error, doc){
 								if(!error){
-									res.render("dashboard.ejs", {user:true, details: newRootUser, fronturl: process.env.FRONTENDURL})
+									res.render(__dirname + "/../views/dashboard.ejs", {user:true, details: newRootUser, fronturl: process.env.FRONTENDURL})
 								} else {
-									res.render("dashboard.ejs", {user:false, data: "There's an Error While Saving your Details. Please Try Again."})
+									res.render(__dirname + "/../views/dashboard.ejs", {user:false, data: "There's an Error While Saving your Details. Please Try Again."})
 								}
 							})
 						} else {
-							res.render("dashboard.ejs", {user:false, data: "There's an Error while Hashing Your Password, Please Try Again Now."})
+							res.render(__dirname + "/../views/dashboard.ejs", {user:false, data: "There's an Error while Hashing Your Password, Please Try Again Now."})
 						}
 					})
 				} else {
-					res.render("dashboard.ejs", {user:false, data: "Password is Null. Please try Again Entering Your Password"})
+					res.render(__dirname + "/../views/dashboard.ejs", {user:false, data: "Password is Null. Please try Again Entering Your Password"})
 				}
 			} else {
-				res.render("dashboard.ejs", {user:false, data: "Your Secret Doesn't Match."})
+				res.render(__dirname + "/../views/dashboard.ejs", {user:false, data: "Your Secret Doesn't Match."})
 			}
 		}
 	})

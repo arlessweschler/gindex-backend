@@ -25,7 +25,7 @@ app.use('/user', require('./routes/user'));
 app.use('/register', require('./routes/register'));
 app.use('/invite', require('./routes/invite'));
 app.use('/delete', require('./routes/delete'));
-app.use('/get', require('./routes/get'))
+app.use('/get', require('./routes/get'));
 app.use('/spam', require('./routes/spam'));
 
 deletePlugin();
