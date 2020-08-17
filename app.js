@@ -28,6 +28,7 @@ app.use('/delete', require('./routes/delete'));
 app.use('/get', require('./routes/get'));
 app.use('/spam', require('./routes/spam'));
 
+//Plugins
 deletePlugin();
 keepAlive();
 const PORT = process.env.PORT || 3000;
