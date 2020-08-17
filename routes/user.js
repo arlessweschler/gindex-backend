@@ -114,22 +114,13 @@ router.post('/forgotpass', function(req, res){
 				var temporaryPass = randomstring.generate({ length: 8, charset: 'alphanumeric' });
 				bcrypt.hash(temporaryPass, 10, function(err, hashedPass){
 					if(hashedPass){
-						User.updateOne({ email: req.body.email }, {$set: { password: null, temppassword: hashedPass, verified: false }}, function(error){
+						User.updateOne({ email: req.body.email }, {$set: { password: null, temppassword: hashedPass, verified: false }}, async function(error){
 							if(!error){
-								const otpMessage = {
-									from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-									to: req.body.email,
-									replyTo: process.env.REPLYTOMAIL,
+								await transport({
+									toemail: req.body.email,
 									subject: 'Reset Your Password',
-									html: forgotPassEmail(result, temporaryPass),
-								}
-								transport.sendMail(otpMessage, function(error, info){
-									if(error){
-										console.log(error);
-									} else {
-										console.log(info);
-									}
-								})
+									htmlContent: forgotPassEmail(result, temporaryPass),
+								});
 								res.status(200).send({auth: true, registered: true, changed: true, message: "OTP has been Sent to Your Email. Reset Your Password by entering the OTP." })
 							} else {
 								res.status(200).send({ auth: false, registered: false, changed: false, message: "Error Occured While Generating OTP. Please Try Again Later." });
@@ -155,25 +146,15 @@ router.post('/delete', function(req, res){
 					if(result.password != null && req.body.pass != null){
 						bcrypt.compare(req.body.pass, result.password, function(err, synced){
 							if(synced){
-								User.deleteOne({ email: req.body.email }, function(error){
+								User.deleteOne({ email: req.body.email },async function(error){
 									if(error){
 										res.status(200).send({ auth: true, registered: true, deleted: false, message: "Some Error Pinging the Servers. Try Again Later." });
 									} else {
-										const deleteMessage = {
-											 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-											 to: req.body.email,
-											 bcc: req.body.ADMINEMAIL,
-											 replyTo: process.env.REPLYTOMAIL,
-											 subject: 'Account has been Deleted.',
-											 html: selfDeleteEmail(result)
-										};
-										transport.sendMail(deleteMessage, function(error, info){
-											if(error){
-												console.log(error);
-											} else {
-												console.log(info);
-											}
-										})
+										await transport({
+											toemail: req.body.email,
+											subject: 'Account has been Deleted.',
+											htmlContent: selfDeleteEmail(result),
+										});
 										res.status(200).send({ auth: true, registered: true, deleted: true, message: "Your Account has been deleted" });
 									}
 								})

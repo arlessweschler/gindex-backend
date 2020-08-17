@@ -48,7 +48,7 @@ router.post('/user', function(req, res){
 											console.log("Request Not Found");
 										}
 									})
-									User.find({ admin: true }, function(error, result){
+									User.find({ admin: true },function(error, result){
 										let adminEmails = [];
 										result.forEach((admin, i) => {
 											adminEmails.push(admin.email)
@@ -60,36 +60,20 @@ router.post('/user', function(req, res){
 											post: "User",
 											message: req.body.message
 										});
-										newPendingUser.save(function(error, doc){
+										newPendingUser.save(async function(error, doc){
 											if(!error){
-												const adminMessage = {
-													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-													 to: adminEmails,
-													 replyTo: process.env.REPLYTOMAIL,
-													 subject: `${process.env.FRONTENDSITENAME} - Access Request`,
-													 html: newRequestToAdminTemplate(req.body)
-												};
-												const userMessage = {
-													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-													 to: req.body.email,
-													 replyTo: process.env.REPLYTOMAIL,
-													 subject: 'Your Request is Pending Confirmation.',
-													 html: newRequestToUserTemplate(req.body),
-												};
-												transport.sendMail(adminMessage, function(error, info){
-													if(error){
-														console.log(error);
-													} else {
-														console.log(info);
-													}
-												})
-												transport.sendMail(userMessage, function(error, info){
-													if(error){
-														console.log(error);
-													} else {
-														console.log(info);
-													}
-												})
+												adminEmails.forEach(async (email, i) => {
+													await transport({
+														toemail: email,
+														subject: `${process.env.FRONTENDSITENAME} - Access Request`,
+														htmlContent: newRequestToAdminTemplate(req.body),
+													});
+												});
+												await transport({
+													toemail: req.body.email,
+													subject: 'Your Request is Pending Confirmation.',
+													htmlContent: newRequestToUserTemplate(req.body),
+												});
 												res.status(200).send({
 													auth: true,
 													registered: true,
@@ -153,7 +137,7 @@ router.post('/admin', function(req, res){
 											post: "Admin",
 											message: req.body.message
 										})
-										newPendingUser.save(function(error, doc){
+										newPendingUser.save(async function(error, doc){
 											if(error){
 												res.status(200).send({
 													auth: true,
@@ -161,34 +145,18 @@ router.post('/admin', function(req, res){
 													message: "Error Sending Your Request."
 												});
 											} else {
-												const adminMessage = {
-													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-													 to: adminEmails,
-													 replyTo: process.env.REPLYTOMAIL,
-													 subject: `${process.env.FRONTENDSITENAME} - Admin Request`,
-													 html: existingRequestToAdminTemplate(req.body, "Admin")
-												};
-												const userMessage = {
-													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-													 to: req.body.email,
-													 replyTo: process.env.REPLYTOMAIL,
-													 subject: 'Your Request is Pending Confirmation.',
-													 html: existingRequestToUserTemplate(req.body, "Admin"),
-												};
-												transport.sendMail(adminMessage, function(error, info){
-													if(error){
-														console.log(error);
-													} else {
-														console.log(info);
-													}
-												})
-												transport.sendMail(userMessage, function(error, info){
-													if(error){
-														console.log(error);
-													} else {
-														console.log(info);
-													}
-												})
+												adminEmails.forEach(async (email, i) => {
+													await transport({
+														toemail: email,
+														subject: `${process.env.FRONTENDSITENAME} - Admin Request`,
+														htmlContent: existingRequestToAdminTemplate(req.body, "Admin"),
+													});
+												});
+												await transport({
+													toemail: req.body.email,
+													subject: 'Your Request is Pending Confirmation.',
+													htmlContent: existingRequestToUserTemplate(req.body, "Admin"),
+												});
 												res.status(200).send({
 													auth: true,
 													registered: true,
@@ -246,7 +214,7 @@ router.post('/superadmin', function(req, res){
 											drive: 0,
 											message: req.body.message
 										})
-										newPendingUser.save(function(error, doc){
+										newPendingUser.save(async function(error, doc){
 											if(error){
 												res.status(200).send({
 													auth: true,
@@ -254,34 +222,18 @@ router.post('/superadmin', function(req, res){
 													message: "Error Sending Your Request."
 												});
 											} else {
-												const adminMessage = {
-													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-													 to: adminEmails,
-													 replyTo: process.env.REPLYTOMAIL,
-													 subject: `${process.env.FRONTENDSITENAME} - Admin Request`,
-													 html: existingRequestToAdminTemplate(req.body, "Superadmin")
-												};
-												const userMessage = {
-													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-													 to: req.body.email,
-													 replyTo: process.env.REPLYTOMAIL,
-													 subject: 'Your Request is Pending Confirmation.',
-													 html: existingRequestToUserTemplate(req.body, "Admin"),
-												};
-												transport.sendMail(adminMessage, function(error, info){
-													if(error){
-														console.log(error);
-													} else {
-														console.log(info);
-													}
-												})
-												transport.sendMail(userMessage, function(error, info){
-													if(error){
-														console.log(error);
-													} else {
-														console.log(info);
-													}
-												})
+												adminEmails.forEach(async (email, i) => {
+													await transport({
+														toemail: email,
+														subject: `${process.env.FRONTENDSITENAME} - Superadmin Request`,
+														htmlContent: existingRequestToAdminTemplate(req.body, "Superadmin"),
+													});
+												});
+												await transport({
+													toemail: req.body.email,
+													subject: 'Your Request is Pending Confirmation.',
+													htmlContent: existingRequestToUserTemplate(req.body, "Superadmin"),
+												});
 												res.status(200).send({
 													auth: true,
 													registered: true,

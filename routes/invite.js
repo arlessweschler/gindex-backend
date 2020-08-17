@@ -36,24 +36,15 @@ router.post('/user', function(req, res){
 											message: req.body.message,
 											invitedby: req.body.adminuseremail
 										})
-										newInvitedAdmin.save(function(error, doc){
+										newInvitedAdmin.save(async function(error, doc){
 											if(error){
 												res.status(200).send({ auth: false, registered: true, message: "Error Processing Your Request." })
 											} else {
-												const message = {
-													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-													 to: req.body.email,
-													 replyTo: process.env.REPLYTOMAIL,
-													 subject: `You have been Invited to ${process.env.FRONTENDSITENAME}`,
-													 html: userInviteTemplate(doc, req.body.adminuseremail, "User", req.body.message)
-												};
-												transport.sendMail(message, function(err, info){
-													if(err){
-														console.log(err);
-													} else {
-														console.log(info);
-													}
-												})
+												await transport({
+													toemail: req.body.email,
+													subject: `You have been Invited to ${process.env.FRONTENDSITENAME}`,
+													htmlContent: userInviteTemplate(doc, req.body.adminuseremail, "User", req.body.message),
+												});
 												res.status(200).send({ auth: true, registered: true, message: 'An Invite Email has been Sent to his Email Address.'});
 											}
 										})
@@ -98,24 +89,15 @@ router.post('/admin', function(req, res){
 														message: req.body.message,
 														invitedby: req.body.adminuseremail
 													})
-													newInvitedAdmin.save(function(error, doc){
+													newInvitedAdmin.save(async function(error, doc){
 														if(error){
 															res.status(200).send({ auth: false, registered: true, message: "Error Processing Your Request." })
 														} else {
-															const message = {
-																 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-																 to: req.body.email,
-																 replyTo: process.env.REPLYTOMAIL,
-																 subject: 'You have been Invited for Admin Post',
-																 html: userInviteTemplate(doc, req.body.adminuseremail, "Admin", req.body.message)
-															};
-															transport.sendMail(message, function(err, info){
-																if(err){
-																	console.log(err);
-																} else {
-																	console.log(info);
-																}
-															})
+															await transport({
+																toemail: req.body.email,
+																subject: 'You have been Invited for Admin Post',
+																htmlContent: userInviteTemplate(doc, req.body.adminuseremail, "Admin", req.body.message),
+															});
 															res.status(200).send({ auth: true, registered: true, message: 'An Invite Email has been Sent to his Email Address.'});
 														}
 													})
@@ -165,24 +147,15 @@ router.post('/superadmin', function(req, res){
 														message: req.body.message,
 														invitedby: req.body.adminuseremail
 													})
-													newInvitedAdmin.save(function(error, doc){
+													newInvitedAdmin.save(async function(error, doc){
 														if(error){
 															res.status(200).send({ auth: false, registered: true, message: "Error Processing Your Request." })
 														} else {
-															const message = {
-																 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-																 to: req.body.email,
-																 replyTo: process.env.REPLYTOMAIL,
-																 subject: 'You have been Invited for SuperAdmin Post',
-																 html: userInviteTemplate(doc, req.body.adminuseremail, "Super Admin", req.body.message)
-															};
-															transport.sendMail(message, function(err, info){
-																if(err){
-																	console.log(err);
-																} else {
-																	console.log(info);
-																}
-															})
+															await transport({
+																toemail: req.body.email,
+																subject: 'You have been Invited for SuperAdmin Post',
+																htmlContent: userInviteTemplate(doc, req.body.adminuseremail, "Super Admin", req.body.message),
+															});
 															res.status(200).send({ auth: true, registered: true, message: 'An Invite Email has been Sent to his Email Address.'});
 														}
 													})
