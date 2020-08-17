@@ -15,7 +15,7 @@ router.post('/user', function(req, res){
 					User.findOne({ email: req.body.adminuseremail }, function(error, result){
 						if(result){
 							if(result.admin){
-								PendingUser.deleteOne({ email: req.body.email, post: "User" }, function(error){
+								PendingUser.deleteOne({ email: req.body.email, post: "User" },async function(error){
 									if(error){
 										res.status(200).send({
 											auth: true,
@@ -23,20 +23,11 @@ router.post('/user', function(req, res){
 											message: "Some Error Processing Your Request. Please Try again Now."
 										});
 									} else {
-										const deleteMessage = {
-			                 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-			                 to: pendingResult.email,
-			                 replyTo: process.env.REPLYTOMAIL,
-			                 subject: 'Regarding Your Request',
-			                 html: deletePendingUserTemplate(pendingResult),
-			              };
-										transport.sendMail(deleteMessage, function(err, info){
-			                if(err){
-			                  console.log(err);
-			                } else {
-			                  console.log(info)
-			                }
-			              })
+										await transport({
+											toemail: pendingResult.email,
+											subject: 'Regarding Your Request',
+											htmlContent: deletePendingUserTemplate(pendingResult),
+										});
 	                  res.status(200).send({
 	                    auth: true,
 	                    removed: true,
@@ -80,7 +71,7 @@ router.post('/admin', function(req, res){
 						if(result){
 							if(result.admin){
 	              if(result.superadmin){
-	                PendingUser.deleteOne({ email: req.body.email, post: "Admin" }, function(error){
+	                PendingUser.deleteOne({ email: req.body.email, post: "Admin" },async function(error){
 	                  if(error){
 	                    res.status(200).send({
 	                      auth: true,
@@ -88,20 +79,11 @@ router.post('/admin', function(req, res){
 	                      message: "Some Error Processing Your Request. Please Try again Now."
 	                    });
 	                  } else {
-	                    const deleteMessage = {
-	                       from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-	                       to: pendingResult.email,
-	                       replyTo: process.env.REPLYTOMAIL,
-	                       subject: 'Regarding Your Request',
-	                       html: deletePendingUserTemplate(pendingResult),
-	                    };
-	                    transport.sendMail(deleteMessage, function(err, info){
-	                      if(err){
-	                        console.log(err);
-	                      } else {
-	                        console.log(info)
-	                      }
-	                    })
+											await transport({
+												toemail: pendingResult.email,
+												subject: 'Regarding Your Request',
+												htmlContent: deletePendingUserTemplate(pendingResult),
+											});
 	                    res.status(200).send({
 	                      auth: true,
 	                      removed: true,
@@ -152,7 +134,7 @@ router.post('/superadmin', function(req, res){
 						if(result){
 							if(result.admin){
 	              if(result.superadmin){
-	                PendingUser.deleteOne({ email: req.body.email, post: "SuperAdmin" }, function(error){
+	                PendingUser.deleteOne({ email: req.body.email, post: "SuperAdmin" },async function(error){
 	                  if(error){
 	                    res.status(200).send({
 	                      auth: true,
@@ -160,20 +142,11 @@ router.post('/superadmin', function(req, res){
 	                      message: "Some Error Processing Your Request. Please Try again Now."
 	                    });
 	                  } else {
-	                    const deleteMessage = {
-	                       from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-	                       to: pendingResult.email,
-	                       replyTo: process.env.REPLYTOMAIL,
-	                       subject: 'Regarding Your Request',
-	                       html: deletePendingUserTemplate(pendingResult),
-	                    };
-	                    transport.sendMail(deleteMessage, function(err, info){
-	                      if(err){
-	                        console.log(err);
-	                      } else {
-	                        console.log(info)
-	                      }
-	                    })
+											await transport({
+												toemail: pendingResult.email,
+												subject: 'Regarding Your Request',
+												htmlContent: deletePendingUserTemplate(pendingResult),
+											});
 	                    res.status(200).send({
 	                      auth: true,
 	                      removed: true,
