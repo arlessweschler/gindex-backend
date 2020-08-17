@@ -26,7 +26,7 @@ router.get('/generate', function(req, res){
 router.post('/generate', function(req, res){
 	bcrypt.hash(req.body.password, 10, function(err, hashedPass){
 		if(hashedPass){
-			res.render("dashboard.ejs", {user: false, showPass: true, hybrid: hashedPass})
+			res.render(__dirname + "/../views/dashboard.ejs", {user: false, showPass: true, hybrid: hashedPass})
 		}
 	})
 });
