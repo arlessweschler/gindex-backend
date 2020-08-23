@@ -34,7 +34,7 @@ router.post('/user', function(req, res){
                     } else {
                       SpamUser.findOne({ email: req.body.email }, function(error, spamUser){
                         if(spamUser){
-                          SpamUser.deleteOne({ email: req.body.email },async function(error){
+                          SpamUser.deleteOne({ email: req.body.email }, function(error){
                             if(error){
                               res.status(200).send({
                                 auth: true,
@@ -42,11 +42,20 @@ router.post('/user', function(req, res){
                                 message: "Error Occured while Removing the User. Please Try Again Later."
                               })
                             } else {
-                              await transport({
-        												toemail: pendingResult.email,
-        												subject: 'You have been Allowed to Login',
-        												htmlContent: removeSpamUser(spamUser),
-        											});
+                              const message = {
+        												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+        												 to: req.body.email,
+        												 replyTo: process.env.REPLYTOMAIL,
+        												 subject: 'You have been Allowed to Login',
+        												 html: removeSpamUser(spamUser)
+        											};
+        											transport.sendMail(message, function(err, info){
+        												if(err){
+        													console.log(err);
+        												} else {
+        													console.log(info);
+        												}
+        											})
                               res.status(200).send({
                                 auth: true,
                                 deleted: true,
@@ -67,7 +76,7 @@ router.post('/user', function(req, res){
                 } else {
                   SpamUser.findOne({ email: req.body.email }, function(error, spamUser){
                     if(spamUser){
-                      SpamUser.deleteOne({ email: req.body.email },async function(error){
+                      SpamUser.deleteOne({ email: req.body.email }, function(error){
                         if(error){
                           res.status(200).send({
                             auth: true,
@@ -75,11 +84,20 @@ router.post('/user', function(req, res){
                             message: "Error Occured while Removing the User. Please Try Again Later."
                           })
                         } else {
-                          await transport({
-                            toemail: pendingResult.email,
-                            subject: 'You have been Allowed to Login',
-                            htmlContent: removeSpamUser(spamUser),
-                          });
+                          const message = {
+                             from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+                             to: req.body.email,
+                             replyTo: process.env.REPLYTOMAIL,
+                             subject: 'You have been Allowed to Login',
+                             html: removeSpamUser(spamUser)
+                          };
+                          transport.sendMail(message, function(err, info){
+                            if(err){
+                              console.log(err);
+                            } else {
+                              console.log(info);
+                            }
+                          })
                           res.status(200).send({
                             auth: true,
                             deleted: true,
@@ -144,7 +162,7 @@ router.post('/admin', function(req, res){
                     } else {
                       SpamUser.findOne({ email: req.body.email }, function(error, spamUser){
                         if(spamUser){
-                          SpamUser.deleteOne({ email: req.body.email },async function(error){
+                          SpamUser.deleteOne({ email: req.body.email }, function(error){
                             if(error){
                               res.status(200).send({
                                 auth: true,
@@ -152,11 +170,20 @@ router.post('/admin', function(req, res){
                                 message: "Error Occured while Removing the User. Please Try Again Later."
                               })
                             } else {
-                              await transport({
-        												toemail: pendingResult.email,
-        												subject: 'You have been Allowed to Login',
-        												htmlContent: removeSpamUser(spamUser),
-        											});
+                              const message = {
+        												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+        												 to: req.body.email,
+        												 replyTo: process.env.REPLYTOMAIL,
+        												 subject: 'You have been Allowed to Login',
+        												 html: removeSpamUser(spamUser)
+        											};
+        											transport.sendMail(message, function(err, info){
+        												if(err){
+        													console.log(err);
+        												} else {
+        													console.log(info);
+        												}
+        											})
                               res.status(200).send({
                                 auth: true,
                                 deleted: true,
@@ -176,7 +203,7 @@ router.post('/admin', function(req, res){
                   } else {
                     SpamUser.findOne({ email: req.body.email }, function(error, spamUser){
                       if(spamUser){
-                        SpamUser.deleteOne({ email: req.body.email },async function(error){
+                        SpamUser.deleteOne({ email: req.body.email }, function(error){
                           if(error){
                             res.status(200).send({
                               auth: true,
@@ -184,11 +211,20 @@ router.post('/admin', function(req, res){
                               message: "Error Occured while Removing the User. Please Try Again Later."
                             })
                           } else {
-                            await transport({
-                              toemail: pendingResult.email,
-                              subject: 'You have been Allowed to Login',
-                              htmlContent: removeSpamUser(spamUser),
-                            });
+                            const message = {
+                               from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+                               to: req.body.email,
+                               replyTo: process.env.REPLYTOMAIL,
+                               subject: 'You have been Allowed to Login',
+                               html: removeSpamUser(spamUser)
+                            };
+                            transport.sendMail(message, function(err, info){
+                              if(err){
+                                console.log(err);
+                              } else {
+                                console.log(info);
+                              }
+                            })
                             res.status(200).send({
                               auth: true,
                               deleted: true,
@@ -253,7 +289,7 @@ router.post('/superadmin', function(req, res){
                   if(resultUser){
                     SpamUser.findOne({ email: req.body.email }, function(error, spamUser){
                       if(spamUser){
-                        SpamUser.deleteOne({ email: req.body.email },async function(error){
+                        SpamUser.deleteOne({ email: req.body.email }, function(error){
                           if(error){
                             res.status(200).send({
                               auth: true,
@@ -261,11 +297,20 @@ router.post('/superadmin', function(req, res){
                               message: "Error Occured while Removing the User. Please Try Again Later."
                             })
                           } else {
-                            await transport({
-                              toemail: pendingResult.email,
-                              subject: 'You have been Allowed to Login',
-                              htmlContent: removeSpamUser(spamUser),
-                            });
+                            const message = {
+                               from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+                               to: req.body.email,
+                               replyTo: process.env.REPLYTOMAIL,
+                               subject: 'You have been Allowed to Login',
+                               html: removeSpamUser(spamUser)
+                            };
+                            transport.sendMail(message, function(err, info){
+                              if(err){
+                                console.log(err);
+                              } else {
+                                console.log(info);
+                              }
+                            })
                             res.status(200).send({
                               auth: true,
                               deleted: true,
@@ -284,7 +329,7 @@ router.post('/superadmin', function(req, res){
                   } else {
                     SpamUser.findOne({ email: req.body.email }, function(error, spamUser){
                       if(spamUser){
-                        SpamUser.deleteOne({ email: req.body.email },async function(error){
+                        SpamUser.deleteOne({ email: req.body.email }, function(error){
                           if(error){
                             res.status(200).send({
                               auth: true,
@@ -292,11 +337,20 @@ router.post('/superadmin', function(req, res){
                               message: "Error Occured while Removing the User. Please Try Again Later."
                             })
                           } else {
-                            await transport({
-                              toemail: pendingResult.email,
-                              subject: 'You have been Allowed to Login',
-                              htmlContent: removeSpamUser(spamUser),
-                            });
+                            const message = {
+                               from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+                               to: req.body.email,
+                               replyTo: process.env.REPLYTOMAIL,
+                               subject: 'You have been Allowed to Login',
+                               html: removeSpamUser(spamUser)
+                            };
+                            transport.sendMail(message, function(err, info){
+                              if(err){
+                                console.log(err);
+                              } else {
+                                console.log(info);
+                              }
+                            })
                             res.status(200).send({
                               auth: true,
                               deleted: true,

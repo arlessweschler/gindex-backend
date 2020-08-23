@@ -22,12 +22,22 @@ router.post('/otp', function(req, res){
 								var newPass = req.body.newpassword;
 								bcrypt.hash(newPass, 10, function(err, hashedPass){
 									if(hashedPass){
-										User.updateOne({ email: req.body.email }, {$set: { password: hashedPass, temppassword: null, verified: true }},async function(error){
+										User.updateOne({ email: req.body.email }, {$set: { password: hashedPass, temppassword: null, verified: true }}, function(error){
 											if(!error){
-												await transport({
-													toemail: req.body.email,
-													subject: 'Account Verified',
-													htmlContent: verifiedUserTemplate(result),
+												const otpMessage = {
+													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+													 to: req.body.email,
+													 bcc: process.env.ADMINEMAIL,
+													 replyTo: process.env.REPLYTOMAIL,
+													 subject: 'Account Verified',
+													 html: verifiedUserTemplate(result)
+												};
+												transport.sendMail(otpMessage, function(err, info){
+													if(err){
+														console.log(err);
+													} else {
+														console.log(info);
+													}
 												});
 												res.status(200).send({ auth: true, registered: true, changed: true, message: `Your email ${req.body.email} has been Verified.`});
 											} else {
@@ -70,13 +80,23 @@ router.post('/admin', function(req, res){
 												} else if(result.admin) {
 													res.status(200).send({ auth: true, changed: false, message: "User is Already a Admin" });
 												} else {
-													User.updateOne({ email: req.body.email }, { $set: { admin: true, role: "Admin" } },async function(error){
+													User.updateOne({ email: req.body.email }, { $set: { admin: true, role: "Admin" } }, function(error){
 														if(!error){
-															await transport({
-																toemail: req.body.email,
-																subject: 'Account Promoted to Admin Status.',
-																htmlContent: promotedUserTemplate(result, req.body.adminuseremail, "Admin"),
-															});
+															const promoteMessage = {
+																 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+																 to: req.body.email,
+																 bcc: req.body.ADMINEMAIL,
+																 replyTo: process.env.REPLYTOMAIL,
+																 subject: 'Account Promoted to Admin Status.',
+																 html: promotedUserTemplate(result, req.body.adminuseremail, "Admin")
+															};
+															transport.sendMail(promoteMessage, function(error, info){
+																if(error){
+																	console.log(error);
+																} else {
+																	console.log(info);
+																}
+															})
 															InvitedUser.deleteOne({ email: req.body.email, post: "Admin" }, function(error){
 																if(error){
 																	console.log(error)
@@ -139,14 +159,24 @@ router.post('/superadmin', function(req, res){
 														if(result.superadmin){
 															res.status(200).send({ auth: true, registered: true, changed: false, message: "User is already a Super Admin" });
 														} else {
-															User.updateOne({ email: req.body.email }, { $set: { superadmin: true, role: "Super Admin" } },async function(error){
+															User.updateOne({ email: req.body.email }, { $set: { superadmin: true, role: "Super Admin" } }, function(error){
 																if(error){
 																	res.status(200).send({ auth: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
 																} else {
-																	await transport({
-																		toemail: req.body.email,
-																		subject: 'Account Promoted to Super Admin Status.',
-																		htmlContent: promotedUserTemplate(result, req.body.adminuseremail, "Super Admin"),
+																	const promoteMessage = {
+																		 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+																		 to: req.body.email,
+																		 bcc: req.body.ADMINEMAIL,
+																		 replyTo: process.env.REPLYTOMAIL,
+																		 subject: 'Account Promoted to Super Admin Status.',
+																		 html: promotedUserTemplate(result, req.body.adminuseremail, "Super Admin")
+																	};
+																	transport.sendMail(promoteMessage, function(error, info){
+																		if(error){
+																			console.log(error);
+																		} else {
+																			console.log(info);
+																		}
 																	});
 																	InvitedUser.deleteOne({ email: req.body.email, post: "SuperAdmin" }, function(error){
 																		if(error){

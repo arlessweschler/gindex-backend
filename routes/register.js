@@ -49,44 +49,41 @@ router.post('/user', function(req, res){
 																	     subject: 'We Have Accepted Your Request.',
 																	     html: registerNewUserTemplate(doc, temporaryPass)
 																	 	};
-																		PendingUser.deleteOne({ email: req.body.email },async function(pendingError){
+																		PendingUser.deleteOne({ email: req.body.email }, function(pendingError){
 																			if(!pendingError){
-																				var result = await transport({
-																					toemail: req.body.email,
-																					subject: 'We Have Accepted Your Request.',
-																					htmlContent: registerNewUserTemplate(doc, temporaryPass),
-																				});
-																				if (!result) {
-																					User.deleteOne({ email: req.body.email}, function(error){
-																						if(error){
-																							console.log(error);
-																						} else {
-																							SpamUser.findOne({ email: req.body.email }, function(spamError, spamResult){
-																								if(spamResult){
-																									console.log(spamResult);
+																				transport.sendMail(message, function(err, info) {
+																						if (err) {
+																							User.deleteOne({ email: req.body.email}, function(error){
+																								if(error){
+																									console.log(error);
 																								} else {
-																									const newSpamUser = new SpamUser({
-																										name: req.body.name,
-																										email: req.body.email,
-																										post: "User",
-																										reason: "His Email Looks Like a Spam",
-																										flaggedby: req.body.adminuseremail
-																									})
-																									newSpamUser.save(function(error, doc){
-																										if(!error){
-																											console.log(error)
+																									SpamUser.findOne({ email: req.body.email }, function(spamError, spamResult){
+																										if(spamResult){
+																											console.log(spamResult);
 																										} else {
-																											console.log(error);
+																											const newSpamUser = new SpamUser({
+																												name: req.body.name,
+																												email: req.body.email,
+																												post: "User",
+																												reason: "His Email Looks Like a Spam",
+																												flaggedby: req.body.adminuseremail
+																											})
+																											newSpamUser.save(function(error, doc){
+																												if(!error){
+																													console.log(error)
+																												} else {
+																													console.log(error);
+																												}
+																											})
 																										}
-																									})
+																									});
+																									res.status(200).send({ auth: false, registered: false, message: "It Looks like the Recipient Mail is Spam." })
 																								}
 																							});
-																							res.status(200).send({ auth: false, registered: false, message: "It Looks like the Recipient Mail is Spam." })
+																						} else {
+																							res.status(200).send({ auth: true, registered: true, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 3 hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
 																						}
-																					});
-																				} else {
-																					res.status(200).send({ auth: true, registered: true, message: 'User Successfully Registered.One Time Password has been sent to Recipient Mail that is Valid for 3 hours. In case the Recipient Did\'t Signup within this Period. Their Account will be Automatically Deleted.'});
-																				}
+																				});
 																			} else {
 																				res.status(200).send({ auth: true, registered: false, message: 'Error While Moving User Database Record. Please Try Again Later.' })
 																			}
@@ -146,20 +143,20 @@ router.post('/rootuser', function(req, res){
 							})
 							newRootUser.save(function(error, doc){
 								if(!error){
-									res.render(__dirname + "/../views/dashboard.ejs", {user:true, details: newRootUser, fronturl: process.env.FRONTENDURL})
+									res.render("dashboard.ejs", {user:true, details: newRootUser, fronturl: process.env.FRONTENDURL})
 								} else {
-									res.render(__dirname + "/../views/dashboard.ejs", {user:false, data: "There's an Error While Saving your Details. Please Try Again."})
+									res.render("dashboard.ejs", {user:false, data: "There's an Error While Saving your Details. Please Try Again."})
 								}
 							})
 						} else {
-							res.render(__dirname + "/../views/dashboard.ejs", {user:false, data: "There's an Error while Hashing Your Password, Please Try Again Now."})
+							res.render("dashboard.ejs", {user:false, data: "There's an Error while Hashing Your Password, Please Try Again Now."})
 						}
 					})
 				} else {
-					res.render(__dirname + "/../views/dashboard.ejs", {user:false, data: "Password is Null. Please try Again Entering Your Password"})
+					res.render("dashboard.ejs", {user:false, data: "Password is Null. Please try Again Entering Your Password"})
 				}
 			} else {
-				res.render(__dirname + "/../views/dashboard.ejs", {user:false, data: "Your Secret Doesn't Match."})
+				res.render("dashboard.ejs", {user:false, data: "Your Secret Doesn't Match."})
 			}
 		}
 	})
