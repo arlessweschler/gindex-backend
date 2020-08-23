@@ -24,15 +24,25 @@ router.post('/user', function(req, res){
 												if(result.admin){
 													res.status(200).send({ auth: false, registered: true, deleted: false, message: "You are Trying to Remove a Admin. Permission Scope Not there." });
 												} else {
-													User.deleteOne({ email: req.body.email }, async function(error){
+													User.deleteOne({ email: req.body.email }, function(error){
 														if(error){
 															res.status(200).send({ auth: true, registered: true, deleted: false, message: "Some Error Pinging the Servers. Try Again Later." });
 														} else {
-															await transport({
-																toemail: req.body.email,
-																subject: 'Account has been Deleted.',
-																htmlContent: deleteMailTemplate(result, req.body.ADMINEMAIL),
-															});
+															const deleteMessage = {
+																 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`, // Sender address
+																 to: req.body.email,
+																 bcc: req.body.ADMINEMAIL,
+																 replyTo: process.env.REPLYTOMAIL,
+																 subject: 'Account has been Deleted.',
+																 html: deleteMailTemplate(result, req.body.ADMINEMAIL)
+															};
+															transport.sendMail(deleteMessage, function(error, info){
+																if(error){
+																	console.log(error);
+																} else {
+																	console.log(info);
+																}
+															})
 															res.status(200).send({ auth: true, registered: true, deleted: true, message: "User has been deleted" });
 														}
 													})
@@ -74,14 +84,24 @@ router.post('/admin', function(req, res){
 									} else {
 										User.findOne({ email: req.body.email }, function(error, result){
 											if(result){
-												User.deleteOne({ email: req.body.email }, async function(error){
+												User.deleteOne({ email: req.body.email }, function(error){
 													if(error){
 														res.status(200).send({ auth: true, token: true, registered: true, deleted: false, message: "Some Error Pinging the Servers. Try Again Later." });
 													} else {
-														await transport({
-															toemail: req.body.email,
-															subject: 'Account has been Deleted.',
-															htmlContent: deleteMailTemplate(result, req.body.ADMINEMAIL),
+														const deleteMessage = {
+															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+															 to: req.body.email,
+															 bcc: req.body.ADMINEMAIL,
+															 replyTo: process.env.REPLYTOMAIL,
+															 subject: 'Account has been Deleted.',
+															 html: deleteMailTemplate(result, req.body.ADMINEMAIL)
+														};
+														transport.sendMail(deleteMessage, function(error, info){
+															if(error){
+																console.log(error);
+															} else {
+																console.log(info);
+															}
 														});
 														res.status(200).send({ auth: true, registered: true, deleted: true, message: "User has been deleted" });
 													}
