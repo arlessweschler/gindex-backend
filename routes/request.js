@@ -12,104 +12,115 @@ const User = require("../models/user");
 const PendingUser = require("../models/pendingUser");
 const SpamUser = require("../models/spamUser");
 const InvitedUser = require("../models/invitedUser");
+const Settings = require("../models/siteSettings");
 
 router.post('/user', function(req, res){
 	if(checkOrigin(req.headers.origin)){
-		PendingUser.findOne({ email: req.body.email }, function(pendingError, pendingResult){
-				if(pendingResult){
-					res.status(200).send({auth: false, registered: false, message: "You Have Already Requested to Join. Please Wait While We Accept." });
-				} else {
-					SpamUser.findOne({ email: req.body.email }, function(spamError, spamResult){
-						if(spamResult){
-							res.status(200).send({
-								auth: false,
-								registered: false,
-								message: "You Already Have an Account and Also You are in our Spam List. Contact through Email to Login."
-							});
+		Settings.findOne({ cId: process.env.FRONTENDSITENAME }, function(error, settingsData){
+			if(settingsData.requests || !settingsData){
+				PendingUser.findOne({ email: req.body.email }, function(pendingError, pendingResult){
+						if(pendingResult){
+							res.status(200).send({auth: false, registered: false, message: "You Have Already Requested to Join. Please Wait While We Accept." });
 						} else {
-							User.findOne({ email: req.body.email }, function(error, result){
-								if(result){
+							SpamUser.findOne({ email: req.body.email }, function(spamError, spamResult){
+								if(spamResult){
 									res.status(200).send({
 										auth: false,
 										registered: false,
-										message: "User already Registered with this Email."
+										message: "You Already Have an Account and Also You are in our Spam List. Contact through Email to Login."
 									});
 								} else {
-									InvitedUser.findOne({ email: req.body.email, post: "User" }, function(error, result){
+									User.findOne({ email: req.body.email }, function(error, result){
 										if(result){
-											InvitedUser.deleteOne({ email: req.body.email, post: "User" }, function(error){
-												if(error){
-													console.log(error);
+											res.status(200).send({
+												auth: false,
+												registered: false,
+												message: "User already Registered with this Email."
+											});
+										} else {
+											InvitedUser.findOne({ email: req.body.email, post: "User" }, function(error, result){
+												if(result){
+													InvitedUser.deleteOne({ email: req.body.email, post: "User" }, function(error){
+														if(error){
+															console.log(error);
+														} else {
+															console.log("Deleted");
+														}
+													})
 												} else {
-													console.log("Deleted");
+													console.log("Request Not Found");
 												}
 											})
-										} else {
-											console.log("Request Not Found");
+											User.find({ admin: true }, function(error, result){
+												let adminEmails = [];
+												result.forEach((admin, i) => {
+													adminEmails.push(admin.email)
+												});
+												const newPendingUser = new PendingUser({
+													name: req.body.name,
+													email:req.body.email,
+													drive: req.body.drives,
+													post: "User",
+													message: req.body.message
+												});
+												newPendingUser.save(function(error, doc){
+													if(!error){
+														const adminMessage = {
+															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+															 to: adminEmails,
+															 replyTo: process.env.REPLYTOMAIL,
+															 subject: `${process.env.FRONTENDSITENAME} - Access Request`,
+															 html: newRequestToAdminTemplate(req.body)
+														};
+														const userMessage = {
+															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+															 to: req.body.email,
+															 replyTo: process.env.REPLYTOMAIL,
+															 subject: 'Your Request is Pending Confirmation.',
+															 html: newRequestToUserTemplate(req.body),
+														};
+														transport.sendMail(adminMessage, function(error, info){
+															if(error){
+																console.log(error);
+															} else {
+																console.log(info);
+															}
+														})
+														transport.sendMail(userMessage, function(error, info){
+															if(error){
+																console.log(error);
+															} else {
+																console.log(info);
+															}
+														})
+														res.status(200).send({
+															auth: true,
+															registered: true,
+															message: "Your Request has been Sent to our Admins for Processing"
+														});
+													} else {
+														res.status(200).send({
+															auth: false,
+															registered: true,
+															message: "Ther's an Error Processing Your Request. Please Try Again Later."
+														});
+													}
+												})
+											})
 										}
-									})
-									User.find({ admin: true }, function(error, result){
-										let adminEmails = [];
-										result.forEach((admin, i) => {
-											adminEmails.push(admin.email)
-										});
-										const newPendingUser = new PendingUser({
-											name: req.body.name,
-											email:req.body.email,
-											drive: req.body.drives,
-											post: "User",
-											message: req.body.message
-										});
-										newPendingUser.save(function(error, doc){
-											if(!error){
-												const adminMessage = {
-													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-													 to: adminEmails,
-													 replyTo: process.env.REPLYTOMAIL,
-													 subject: `${process.env.FRONTENDSITENAME} - Access Request`,
-													 html: newRequestToAdminTemplate(req.body)
-												};
-												const userMessage = {
-													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-													 to: req.body.email,
-													 replyTo: process.env.REPLYTOMAIL,
-													 subject: 'Your Request is Pending Confirmation.',
-													 html: newRequestToUserTemplate(req.body),
-												};
-												transport.sendMail(adminMessage, function(error, info){
-													if(error){
-														console.log(error);
-													} else {
-														console.log(info);
-													}
-												})
-												transport.sendMail(userMessage, function(error, info){
-													if(error){
-														console.log(error);
-													} else {
-														console.log(info);
-													}
-												})
-												res.status(200).send({
-													auth: true,
-													registered: true,
-													message: "Your Request has been Sent to our Admins for Processing"
-												});
-											} else {
-												res.status(200).send({
-													auth: false,
-													registered: true,
-													message: "Ther's an Error Processing Your Request. Please Try Again Later."
-												});
-											}
-										})
 									})
 								}
 							})
 						}
 					})
-				}
-			})
+			} else {
+				res.status(200).send({
+					auth: false,
+					registered: true,
+					message: "User Requests are Closed by the Admin. Please Try Afterwards or Contact Admins."
+				});
+			}
+		})
 	} else {
 		res.status(200).send({ auth: false, message: "UNAUTHORIZED" })
 	}
@@ -117,98 +128,108 @@ router.post('/user', function(req, res){
 
 router.post('/admin', function(req, res){
 	if(checkOrigin(req.headers.origin)){
-		PendingUser.findOne({ email: req.body.email, post: "Admin" }, function(error, result){
-				if(result){
-					res.status(200).send({
-						auth: true,
-						changed: false,
-						message: "You are Allowed to Request only One Time.Please Wait"
-					});
-				} else {
-					User.findOne({ email: req.body.email }, function(error, result){
+		Settings.findOne({ cId: process.env.FRONTENDSITENAME }, function(err, settingsData){
+			if(settingsData.adminRequests || !settingsData){
+				PendingUser.findOne({ email: req.body.email, post: "Admin" }, function(error, result){
 						if(result){
-							if(result.superadmin){
-								res.status(200).send({
-									auth: true,
-									changed: false,
-									message: "You are a Already a Super Admin"
-								});
-							} else {
-								if(result.admin){
-									res.status(200).send({
-										auth: true,
-										changed: false,
-										message: "You are Already an Admin."
-									});
-								} else {
-									User.find({ superadmin: true }, function(error, result){
-										let adminEmails = [];
-										result.forEach((admin, i) => {
-											adminEmails.push(admin.email)
-										});
-										const newPendingUser = new PendingUser({
-											name: req.body.name,
-											email: req.body.email,
-											drive: 0,
-											post: "Admin",
-											message: req.body.message
-										})
-										newPendingUser.save(function(error, doc){
-											if(error){
-												res.status(200).send({
-													auth: true,
-													changed: false,
-													message: "Error Sending Your Request."
-												});
-											} else {
-												const adminMessage = {
-													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-													 to: adminEmails,
-													 replyTo: process.env.REPLYTOMAIL,
-													 subject: `${process.env.FRONTENDSITENAME} - Admin Request`,
-													 html: existingRequestToAdminTemplate(req.body, "Admin")
-												};
-												const userMessage = {
-													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-													 to: req.body.email,
-													 replyTo: process.env.REPLYTOMAIL,
-													 subject: 'Your Request is Pending Confirmation.',
-													 html: existingRequestToUserTemplate(req.body, "Admin"),
-												};
-												transport.sendMail(adminMessage, function(error, info){
-													if(error){
-														console.log(error);
-													} else {
-														console.log(info);
-													}
-												})
-												transport.sendMail(userMessage, function(error, info){
-													if(error){
-														console.log(error);
-													} else {
-														console.log(info);
-													}
-												})
-												res.status(200).send({
-													auth: true,
-													registered: true,
-													message: "Your Request has been Sent to our Admins for Processing"
-												});
-											}
-										})
-									})
-								}
-							}
-						} else {
 							res.status(200).send({
 								auth: true,
 								changed: false,
-								message: "BAD REQUEST"
+								message: "You are Allowed to Request only One Time.Please Wait"
 							});
+						} else {
+							User.findOne({ email: req.body.email }, function(error, result){
+								if(result){
+									if(result.superadmin){
+										res.status(200).send({
+											auth: true,
+											changed: false,
+											message: "You are a Already a Super Admin"
+										});
+									} else {
+										if(result.admin){
+											res.status(200).send({
+												auth: true,
+												changed: false,
+												message: "You are Already an Admin."
+											});
+										} else {
+											User.find({ superadmin: true }, function(error, result){
+												let adminEmails = [];
+												result.forEach((admin, i) => {
+													adminEmails.push(admin.email)
+												});
+												const newPendingUser = new PendingUser({
+													name: req.body.name,
+													email: req.body.email,
+													drive: 0,
+													post: "Admin",
+													message: req.body.message
+												})
+												newPendingUser.save(function(error, doc){
+													if(error){
+														res.status(200).send({
+															auth: true,
+															changed: false,
+															message: "Error Sending Your Request."
+														});
+													} else {
+														const adminMessage = {
+															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+															 to: adminEmails,
+															 replyTo: process.env.REPLYTOMAIL,
+															 subject: `${process.env.FRONTENDSITENAME} - Admin Request`,
+															 html: existingRequestToAdminTemplate(req.body, "Admin")
+														};
+														const userMessage = {
+															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+															 to: req.body.email,
+															 replyTo: process.env.REPLYTOMAIL,
+															 subject: 'Your Request is Pending Confirmation.',
+															 html: existingRequestToUserTemplate(req.body, "Admin"),
+														};
+														transport.sendMail(adminMessage, function(error, info){
+															if(error){
+																console.log(error);
+															} else {
+																console.log(info);
+															}
+														})
+														transport.sendMail(userMessage, function(error, info){
+															if(error){
+																console.log(error);
+															} else {
+																console.log(info);
+															}
+														})
+														res.status(200).send({
+															auth: true,
+															registered: true,
+															message: "Your Request has been Sent to our Admins for Processing"
+														});
+													}
+												})
+											})
+										}
+									}
+								} else {
+									res.status(200).send({
+										auth: true,
+										changed: false,
+										message: "BAD REQUEST"
+									});
+								}
+							})
 						}
 					})
-				}
-			})
+			} else {
+				res.status(200).send({
+					auth: false,
+					registered: true,
+					message: "User Requests are Closed by the Admin. Please Try Afterwards or Contact Admins."
+				});
+			}
+		})
 	} else {
 		res.status(200).send({ auth: false, message: "UNAUTHORIZED" })
 	}
@@ -216,98 +237,108 @@ router.post('/admin', function(req, res){
 
 router.post('/superadmin', function(req, res){
 	if(checkOrigin(req.headers.origin)){
-		PendingUser.findOne({ email: req.body.email, post: "SuperAdmin" }, function(error, result){
-				if(result){
-					res.status(200).send({
-						auth: true,
-						changed: false,
-						message: "You are Allowed to Request only One Time.Please Wait"
-					});
-				} else {
-					User.findOne({ email: req.body.email }, function(error, result){
+		Settings.findOne({ cId: process.env.FRONTENDSITENAME }, function(err, settingsData){
+			if(settingsData.adminRequests || !settingsData){
+				PendingUser.findOne({ email: req.body.email, post: "SuperAdmin" }, function(error, result){
 						if(result){
-							if(result.superadmin){
-								res.status(200).send({
-									auth: true,
-									changed: false,
-									message: "You are a Already a Super Admin"
-								});
-							} else {
-								if(result.admin){
-									User.find({ superadmin: true }, function(error, result){
-										let adminEmails = [];
-										result.forEach((admin, i) => {
-											adminEmails.push(admin.email)
+							res.status(200).send({
+								auth: true,
+								changed: false,
+								message: "You are Allowed to Request only One Time.Please Wait"
+							});
+						} else {
+							User.findOne({ email: req.body.email }, function(error, result){
+								if(result){
+									if(result.superadmin){
+										res.status(200).send({
+											auth: true,
+											changed: false,
+											message: "You are a Already a Super Admin"
 										});
-										const newPendingUser = new PendingUser({
-											name: req.body.name,
-											email: req.body.email,
-											post: "SuperAdmin",
-											drive: 0,
-											message: req.body.message
-										})
-										newPendingUser.save(function(error, doc){
-											if(error){
-												res.status(200).send({
-													auth: true,
-													changed: false,
-													message: "Error Sending Your Request."
+									} else {
+										if(result.admin){
+											User.find({ superadmin: true }, function(error, result){
+												let adminEmails = [];
+												result.forEach((admin, i) => {
+													adminEmails.push(admin.email)
 												});
-											} else {
-												const adminMessage = {
-													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-													 to: adminEmails,
-													 replyTo: process.env.REPLYTOMAIL,
-													 subject: `${process.env.FRONTENDSITENAME} - Admin Request`,
-													 html: existingRequestToAdminTemplate(req.body, "Superadmin")
-												};
-												const userMessage = {
-													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-													 to: req.body.email,
-													 replyTo: process.env.REPLYTOMAIL,
-													 subject: 'Your Request is Pending Confirmation.',
-													 html: existingRequestToUserTemplate(req.body, "Admin"),
-												};
-												transport.sendMail(adminMessage, function(error, info){
+												const newPendingUser = new PendingUser({
+													name: req.body.name,
+													email: req.body.email,
+													post: "SuperAdmin",
+													drive: 0,
+													message: req.body.message
+												})
+												newPendingUser.save(function(error, doc){
 													if(error){
-														console.log(error);
+														res.status(200).send({
+															auth: true,
+															changed: false,
+															message: "Error Sending Your Request."
+														});
 													} else {
-														console.log(info);
+														const adminMessage = {
+															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+															 to: adminEmails,
+															 replyTo: process.env.REPLYTOMAIL,
+															 subject: `${process.env.FRONTENDSITENAME} - Admin Request`,
+															 html: existingRequestToAdminTemplate(req.body, "Superadmin")
+														};
+														const userMessage = {
+															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+															 to: req.body.email,
+															 replyTo: process.env.REPLYTOMAIL,
+															 subject: 'Your Request is Pending Confirmation.',
+															 html: existingRequestToUserTemplate(req.body, "Admin"),
+														};
+														transport.sendMail(adminMessage, function(error, info){
+															if(error){
+																console.log(error);
+															} else {
+																console.log(info);
+															}
+														})
+														transport.sendMail(userMessage, function(error, info){
+															if(error){
+																console.log(error);
+															} else {
+																console.log(info);
+															}
+														})
+														res.status(200).send({
+															auth: true,
+															registered: true,
+															message: "Your Request has been Sent to our Admins for Processing"
+														});
 													}
 												})
-												transport.sendMail(userMessage, function(error, info){
-													if(error){
-														console.log(error);
-													} else {
-														console.log(info);
-													}
-												})
-												res.status(200).send({
-													auth: true,
-													registered: true,
-													message: "Your Request has been Sent to our Admins for Processing"
-												});
-											}
-										})
-									})
+											})
+										} else {
+											res.status(200).send({
+												auth: true,
+												changed: false,
+												message: "You Need to be a Admin to Request to be a Super Admin."
+											});
+										}
+									}
 								} else {
 									res.status(200).send({
 										auth: true,
 										changed: false,
-										message: "You Need to be a Admin to Request to be a Super Admin."
+										message: "BAD REQUEST"
 									});
 								}
-							}
-						} else {
-							res.status(200).send({
-								auth: true,
-								changed: false,
-								message: "BAD REQUEST"
-							});
+							})
 						}
 					})
-				}
-			})
+			} else {
+				res.status(200).send({
+					auth: false,
+					registered: true,
+					message: "User Requests are Closed by the Admin. Please Try Afterwards or Contact Admins."
+				});
+			}
+		})
 	} else {
 		res.status(200).send({ auth: false, message: "UNAUTHORIZED" })
 	}
