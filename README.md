@@ -11,7 +11,7 @@ If you apply a Creative Commons license and a user violates the license conditio
 # gindex-backend
 Backend for gindex for Maintaining User Database
 
-**Support Group can be Found Here - [Here](https://t.me/joinchat/MXJ4wk5Gs__QFZbvBdd_pg)**<br>
+**Support Group can be Found Here - [Here](https://t.me/joinchat/LVLR1U5Gs_9lmHGNGqpxIw)**<br>
 Any Issues / Help Regarding Setup, Contact Through the telegram Group
 
 ##### without this the Main GIndex wont work, Both should run simultaneously.
