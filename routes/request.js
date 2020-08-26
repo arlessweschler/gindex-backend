@@ -17,7 +17,7 @@ const Settings = require("../models/siteSettings");
 router.post('/user', function(req, res){
 	if(checkOrigin(req.headers.origin)){
 		Settings.findOne({ cId: process.env.FRONTENDSITENAME }, function(error, settingsData){
-			if(settingsData.requests || !settingsData){
+			if(!settingsData || settingsData.requests){
 				PendingUser.findOne({ email: req.body.email }, function(pendingError, pendingResult){
 						if(pendingResult){
 							res.status(200).send({auth: false, registered: false, message: "You Have Already Requested to Join. Please Wait While We Accept." });
@@ -129,7 +129,7 @@ router.post('/user', function(req, res){
 router.post('/admin', function(req, res){
 	if(checkOrigin(req.headers.origin)){
 		Settings.findOne({ cId: process.env.FRONTENDSITENAME }, function(err, settingsData){
-			if(settingsData.adminRequests || !settingsData){
+			if(!settingsData || settingsData.adminRequests){
 				PendingUser.findOne({ email: req.body.email, post: "Admin" }, function(error, result){
 						if(result){
 							res.status(200).send({
@@ -238,7 +238,7 @@ router.post('/admin', function(req, res){
 router.post('/superadmin', function(req, res){
 	if(checkOrigin(req.headers.origin)){
 		Settings.findOne({ cId: process.env.FRONTENDSITENAME }, function(err, settingsData){
-			if(settingsData.adminRequests || !settingsData){
+			if(!settingsData || settingsData.adminRequests){
 				PendingUser.findOne({ email: req.body.email, post: "SuperAdmin" }, function(error, result){
 						if(result){
 							res.status(200).send({
