@@ -12,7 +12,7 @@ const checkOrigin = require("../plugins/checkOrigin");
 router.get('/', function(req, res){
 	User.findOne({ superadmin: true }, function(error, result){
 		if(result){
-			res.render("dashboard.ejs", { user: false, showPass: false, data: "This is a Backend for G-Index. This has Been Already Setup. So Nothing Exists Here Afterwards. Use Your Frontend to Communicate." });
+			res.render("dashboard.ejs", { user: false, showPass: false, data: "This is a Backend for G-Index. This has Been Already Setup. So Nothing Exists Here Afterwards. Use Your Frontend to Communicate.", fronturl: process.env.FRONTENDURL.split(",")[0] });
 		} else {
 			res.render("signup.ejs");
 		}

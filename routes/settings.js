@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const checkOrigin = require("../plugins/checkOrigin");
+const jwtVerify = require('../plugins/jwtVerify');
 
 //Model Imports
 const User = require("../models/user");
@@ -8,38 +9,42 @@ const Settings = require("../models/siteSettings");
 
 router.post('/set', function(req, res){
 	if(checkOrigin(req.headers.origin)){
-		User.findOne({ email: req.body.email }, function(error, result){
-			if(result){
-				if(result.admin && result.superadmin){
-					Settings.findOne({ cId: process.env.FRONTENDSITENAME }, function(error, settingsData){
-						if(settingsData){
-							Settings.updateOne({ cId: process.env.FRONTENDSITENAME }, { $set: { requests: req.body.requests, adminRequests: req.body.adminrequests } }, function(error){
-								if(!error){
-									res.status(200).send({ auth: true, registered: true, changed: true, message: "Your Preferences have been Saved." });
-								} else {
-									res.status(200).send({ auth: true, registered: true, changed: false, message: "Error Occured while Saving Your Preferences" });
-								}
-							})
-						} else {
-							const newData = new Settings({
-								cId: process.env.FRONTENDSITENAME,
-								requests: req.body.requests,
-								adminRequests: req.body.adminrequests
-							});
-							newData.save(function(error, doc){
-								if(!error){
-									res.status(200).send({ auth: true, registered: true, changed: true, data: doc, message: "Your Preferences have been Saved." });
-								}
-							})
-						}
-					})
+		if(jwtVerify(req.headers.token)){
+			User.findOne({ email: req.body.email }, function(error, result){
+				if(result){
+					if(result.admin && result.superadmin){
+						Settings.findOne({ cId: process.env.FRONTENDSITENAME }, function(error, settingsData){
+							if(settingsData){
+								Settings.updateOne({ cId: process.env.FRONTENDSITENAME }, { $set: { requests: req.body.requests, adminRequests: req.body.adminrequests } }, function(error){
+									if(!error){
+										res.status(200).send({ auth: true, registered: true, changed: true, message: "Your Preferences have been Saved." });
+									} else {
+										res.status(200).send({ auth: true, registered: true, changed: false, message: "Error Occured while Saving Your Preferences" });
+									}
+								})
+							} else {
+								const newData = new Settings({
+									cId: process.env.FRONTENDSITENAME,
+									requests: req.body.requests,
+									adminRequests: req.body.adminrequests
+								});
+								newData.save(function(error, doc){
+									if(!error){
+										res.status(200).send({ auth: true, registered: true, changed: true, data: doc, message: "Your Preferences have been Saved." });
+									}
+								})
+							}
+						})
+					} else {
+						res.status(200).send({ auth: false, registered: true, changed: false, message: "You don't Have Enough Permissions." })
+					}
 				} else {
-					res.status(200).send({ auth: false, registered: true, changed: false, message: "You don't Have Enough Permissions." })
+					res.status(200).send({ auth: false, registered: false, changed: false, message: "Account Doesn't Exists" })
 				}
-			} else {
-				res.status(200).send({ auth: false, registered: false, changed: false, message: "Account Doesn't Exists" })
-			}
-		})
+			})
+		} else {
+		  res.status(200).send({ auth: false, message: "Bearer Token Not Valid" })
+		}
 	} else {
 		res.status(200).send({ auth: false, message: "UNAUTHORIZED" })
 	}
