@@ -16,6 +16,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 mongoose.connect(process.env.DBURL, {useNewUrlParser: true,  useUnifiedTopology: true, useCreateIndex: true})
+
 //Routes
 app.use('/', require('./routes/index'));
 app.use('/login', require('./routes/login'));
