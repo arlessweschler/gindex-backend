@@ -16,16 +16,20 @@ app.use(bodyParser.json());
 app.use(cors());
 
 mongoose.connect(process.env.DBURL, {useNewUrlParser: true,  useUnifiedTopology: true, useCreateIndex: true})
+
 //Routes
 app.use('/', require('./routes/index'));
 app.use('/login', require('./routes/login'));
 app.use('/ping', require('./routes/ping'));
 app.use('/request', require('./routes/request'));
 app.use('/user', require('./routes/user'));
+app.use('/media', require('./routes/media'));
+app.use('/posters', require('./routes/poster'));
 app.use('/register', require('./routes/register'));
 app.use('/invite', require('./routes/invite'));
 app.use('/delete', require('./routes/delete'));
-app.use('/get', require('./routes/get'))
+app.use('/settings', require('./routes/settings'));
+app.use('/get', require('./routes/get'));
 app.use('/spam', require('./routes/spam'));
 
 deletePlugin();
