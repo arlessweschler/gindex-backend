@@ -36,47 +36,6 @@ router.post('/verify', function(req, res){
 	}
 });
 
-router.post('/media/transmit', function(req, res){
-	if(checkOrigin(req.headers.origin)){
-		User.findOne({ email: req.body.email }, function(error, result){
-				if(result){
-					jwt.verify(req.body.token, process.env.TOKENSECRET, function(error, decoded){
-						if(decoded){
-							let mediaToken = jwt.sign({ result }, process.env.TOKENSECRET, {expiresIn: 10800});
-							res.status(200).send({ auth: true, registered: true, token: mediaToken });
-						} else {
-							res.status(200).send({auth: false, registered: false, tokenuser: false});
-						}
-					})
-				} else {
-					res.status(200).send({auth: false, registered: false, tokenuser: false});
-				}
-			})
-	} else {
-		res.status(200).send({ auth: false, message: "UNAUTHORIZED" })
-	}
-})
-
-router.post('/media/verify', function(req, res){
-	if(checkOrigin(req.headers.origin)){
-		User.findOne({ email: req.body.email }, function(error, result){
-				if(result){
-					jwt.verify(req.body.token, process.env.TOKENSECRET, function(error, decoded){
-						if(decoded){
-							res.status(200).send({ auth: true, registered: true, tokenuser: decoded });
-						} else {
-							res.status(200).send({auth: false, registered: false, tokenuser: null});
-						}
-					});
-				} else {
-					res.status(200).send({auth: false, registered: false, tokenuser: false});
-				}
-			})
-	} else {
-		res.status(200).send({ auth: false, message: "UNAUTHORIZED" })
-	}
-})
-
 router.post('/changepassword', function(req, res){
 	if(checkOrigin(req.headers.origin)){
 		User.findOne({ email: req.body.email }, function(error, result){
@@ -107,45 +66,6 @@ router.post('/changepassword', function(req, res){
 		res.status(200).send({ auth: false, message: "UNAUTHORIZED" })
 	}
 });
-
-router.post('/sitesettings', function(req, res){
-	if(checkOrigin(req.headers.origin)){
-		User.findOne({ email: req.body.email }, function(error, result){
-			if(result){
-				if(result.admin && result.superadmin){
-					Settings.findOne({ cId: process.env.FRONTENDSITENAME }, function(error, settingsData){
-						if(settingsData){
-							Settings.updateOne({ cId: process.env.FRONTENDSITENAME }, { $set: { requests: req.body.requests, adminRequests: req.body.adminrequests } }, function(error){
-								if(!error){
-									res.status(200).send({ auth: true, registered: true, changed: true, message: "Your Preferences have been Saved." });
-								} else {
-									res.status(200).send({ auth: true, registered: true, changed: false, message: "Error Occured while Saving Your Preferences" });
-								}
-							})
-						} else {
-							const newData = new Settings({
-								cId: process.env.FRONTENDSITENAME,
-								requests: req.body.requests,
-								adminRequests: req.body.adminrequests
-							});
-							newData.save(function(error, doc){
-								if(!error){
-									res.status(200).send({ auth: true, registered: true, changed: true, data: doc, message: "Your Preferences have been Saved." });
-								}
-							})
-						}
-					})
-				} else {
-					res.status(200).send({ auth: false, registered: true, changed: false, message: "You don't Have Enough Permissions." })
-				}
-			} else {
-				res.status(200).send({ auth: false, registered: false, changed: false, message: "Account Doesn't Exists" })
-			}
-		})
-	} else {
-		res.status(200).send({ auth: false, message: "UNAUTHORIZED" })
-	}
-})
 
 router.post('/forgotpass', function(req, res){
 	if(checkOrigin(req.headers.origin)){

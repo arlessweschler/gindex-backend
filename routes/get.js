@@ -185,20 +185,6 @@ router.post('/superadmins', function(req, res){
 	}
 })
 
-router.post("/sitesettings", function(req, res){
-	if(checkOrigin(req.headers.origin)){
-		Settings.findOne({ cId: process.env.FRONTENDSITENAME }, function(error, result){
-			if(result){
-				res.status(200).send({ auth: true, registered: true, data: result });
-			} else {
-				res.status(200).send({ auth: false, registered: true, message: "There's an Error while Getting Site Details." });
-			}
-		})
-	} else {
-		res.status(200).send({ auth: false, message: "UNAUTHORIZED" })
-	}
-})
-
 router.use('/pending', require('./pending'));
 router.use('/spam', require('./getspam'));
 
