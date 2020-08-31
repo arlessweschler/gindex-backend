@@ -8,3 +8,5 @@ function returnTemplate(userDetails, admin, post){
   <p><b>${process.env.FRONTENDSITENAME}</b></p>
   `
 }
+
+module.exports = returnTemplate;
