@@ -12,14 +12,8 @@ router.post('/generate', function(req, res){
 		if(jwtVerify(req.headers.token)){
 			User.findOne({ email: req.body.email }, function(error, result){
 					if(result){
-						jwt.verify(req.body.token, process.env.TOKENSECRET, function(error, decoded){
-							if(decoded){
-								let mediaToken = jwt.sign({ result }, process.env.TOKENSECRET, {expiresIn: 10800});
-								res.status(200).send({ auth: true, registered: true, token: mediaToken });
-							} else {
-								res.status(200).send({auth: false, registered: false, tokenuser: false});
-							}
-						})
+						let mediaToken = jwt.sign({ result }, process.env.TOKENSECRET, {expiresIn: 10800});
+						res.status(200).send({ auth: true, registered: true, token: mediaToken });
 					} else {
 						res.status(200).send({auth: false, registered: false, tokenuser: false});
 					}

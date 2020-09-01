@@ -5,17 +5,17 @@ const jwtVerify = require('../../../plugins/jwtVerify');
 
 //Model Imports
 const User = require("../../../models/user");
-const TrendingPost = require("../../../models/trendingPost");
+const QuickLink = require("../../../models/quickLink");
 
 router.post("/get", function(req, res){
   if(checkOrigin(req.headers.origin)){
     if(jwtVerify(req.headers.token)){
       User.findOne({ email: req.body.email }, function(error, result){
         if(result){
-          TrendingPost.find({ root: req.body.root }, function(error, trendingPosts){
-            if(trendingPosts){
-              if(trendingPosts.length > 0){
-                res.status(200).send({ auth: true, registered: true, root: req.body.root, posts: trendingPosts });
+          QuickLink.find({ root: req.body.root }, function(error, quicklinks){
+            if(quicklinks){
+              if(quicklinks.length > 0){
+                res.status(200).send({ auth: true, registered: true, root: req.body.root, posts: quicklinks });
               } else {
                 res.status(200).send({ auth: false, registered: true, message: "No Posts Found in Your DB" });
               }
@@ -41,9 +41,9 @@ router.post("/set", function(req, res){
       User.findOne({ email: req.body.email }, function(error, result){
         if(result){
           if(result.admin){
-            TrendingPost.findOne({ _id: req.body.postId }, function(error, trendpost){
-              if(trendpost){
-                TrendingPost.updateOne({ _id: req.body.postId }, { $set: req.body.post }, function(error){
+            QuickLink.findOne({ _id: req.body.postId }, function(error, quicklinks){
+              if(quicklinks){
+                QuickLink.updateOne({ _id: req.body.postId }, { $set: req.body.post }, function(error){
                   if(!error){
                     console.log("Updated Posts");
                     res.status(200).send({ auth: true, registered: true, changed: true, message: "Successfully Updated Posts" });
@@ -54,10 +54,9 @@ router.post("/set", function(req, res){
                 })
               } else {
                 let reqPost = req.body.post;
-                const newPost = new TrendingPost({
+                const newPost = new QuickLink({
                   root: reqPost.root,
                   title: reqPost.title,
-                  poster: reqPost.poster,
                   link: reqPost.link
                 })
                 newPost.save(function(error, doc){
@@ -90,9 +89,9 @@ router.post("/delete", function(req, res){
       User.findOne({ email: req.body.email }, function(error, result){
         if(result){
           if(result.admin){
-            TrendingPost.findOne({ _id: req.body.postId }, function(error, trendpost){
-              if(trendpost){
-                TrendingPost.deleteOne({ _id: req.body.postId }, function(error){
+            QuickLink.findOne({ _id: req.body.postId }, function(error, quicklinks){
+              if(quicklinks){
+                QuickLink.deleteOne({ _id: req.body.postId }, function(error){
                   if(!error){
                     res.status(200).send({ auth: true, registered: true, message: "Your Post has been Successfully Deleted" });
                   } else {
