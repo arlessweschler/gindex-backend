@@ -19,7 +19,7 @@ router.post("/all", function(req, res){
             HeroPost.find({ root: req.body.root }, function(error, heroPosts){
               CategoryPost.find({ root: req.body.root }, function(error, categoryPosts){
                 QuickLink.find({ root: req.body.root }, function(error, quicklinks){
-                  if(quicklinks.length < 1 && trendingPosts.length < 1 && heroPosts.length < 1 && categoryPosts.length < 1){
+                  if(quicklinks && trendingPosts.length < 1 && heroPosts.length < 1 && categoryPosts.length < 1){
                     res.status(200).send({ auth: false, registered: true, message: "No Posts Found in Your DB" });
                   } else {
                     res.status(200).send({ auth: true, registered: true, root: req.body.root, quicklink: quicklinks, hero: heroPosts, category: categoryPosts, trending: trendingPosts });

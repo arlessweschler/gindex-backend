@@ -216,7 +216,7 @@ function returnTemplate(userDetails, temppass) {
                                 <!-- START HEADER IMAGE -->
                                 <tr>
                                   <td align="center" class="hund ripplelink" width="600">
-                                    <img align="center" width="600" style="border-radius: 3px 3px 0px 0px; width: 100%; max-width: 600px!important" class="hund" src="https://i.ibb.co/w4FKnR6/material.gif">
+                                    <img align="center" width="600" style="border-radius: 3px 3px 0px 0px; width: 100%; max-width: 600px!important" class="hund" src="${process.env.EMAILGIF}">
                                   </td>
                                 </tr>
                                 <!-- END HEADER IMAGE -->
