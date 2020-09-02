@@ -16,44 +16,38 @@ router.post('/user', function(req, res){
 			User.findOne({ email: req.body.adminuseremail }, function(error, result){
 					if(result){
 						if(result.admin){
-							bcrypt.compare(req.body.adminpass, result.password, function(err, synced){
-								if(synced){
-									User.findOne({ email: req.body.email }, function(error, result){
-										if(result){
-											const spamUser = new SpamUser({
-												name: result.name,
-												email: result.email,
-												post: "User",
-												flaggedby: req.body.adminuseremail,
-												reason: req.body.message
-											})
-											spamUser.save(function(error, doc){
-												if(error){
-													res.status(200).send({ auth: true, registered: false, message: "Error Processing Request. Try Again Later" });
+							User.findOne({ email: req.body.email }, function(error, result){
+								if(result){
+									const spamUser = new SpamUser({
+										name: result.name,
+										email: result.email,
+										post: "User",
+										flaggedby: req.body.adminuseremail,
+										reason: req.body.message
+									})
+									spamUser.save(function(error, doc){
+										if(error){
+											res.status(200).send({ auth: true, registered: false, message: "Error Processing Request. Try Again Later" });
+										} else {
+											const message = {
+												 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+												 to: req.body.email,
+												 replyTo: process.env.REPLYTOMAIL,
+												 subject: 'You Have Been Flagged',
+												 html: spamUserTemplate(doc, req.body.adminuseremail, req.body.message)
+											};
+											transport.sendMail(message, function(err, info){
+												if(err){
+													console.log(err);
 												} else {
-													const message = {
-														 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-														 to: req.body.email,
-														 replyTo: process.env.REPLYTOMAIL,
-														 subject: 'You Have Been Flagged',
-														 html: spamUserTemplate(doc, req.body.adminuseremail, req.body.message)
-													};
-													transport.sendMail(message, function(err, info){
-														if(err){
-															console.log(err);
-														} else {
-															console.log(info);
-														}
-													})
-													res.status(200).send({ auth: true, registered: true, message: 'User has Been Added to Spam User Database.'});
+													console.log(info);
 												}
 											})
-										} else {
-											res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
+											res.status(200).send({ auth: true, registered: true, message: 'User has Been Added to Spam User Database.'});
 										}
 									})
 								} else {
-									res.status(200).send({ auth: false, registered: true, message: "Your Admin Password does Not Match with our Records" })
+									res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
 								}
 							})
 						} else {
@@ -164,44 +158,38 @@ router.post('/admin', function(req, res){
 					if(result){
 						if(result.admin){
 							if(result.superadmin){
-								bcrypt.compare(req.body.adminpass, result.password, function(err, synced){
-									if(synced){
-										User.findOne({ email: req.body.email }, function(error, result){
-											if(result){
-												const spamUser = new SpamUser({
-													name: result.name,
-													email: result.email,
-													post: "Admin",
-													flaggedby: req.body.adminuseremail,
-													reason: req.body.message
-												})
-												spamUser.save(function(error, doc){
-													if(error){
-														res.status(200).send({ auth: true, registered: false, message: "Error Processing Request. Try Again Later" });
+								User.findOne({ email: req.body.email }, function(error, result){
+									if(result){
+										const spamUser = new SpamUser({
+											name: result.name,
+											email: result.email,
+											post: "Admin",
+											flaggedby: req.body.adminuseremail,
+											reason: req.body.message
+										})
+										spamUser.save(function(error, doc){
+											if(error){
+												res.status(200).send({ auth: true, registered: false, message: "Error Processing Request. Try Again Later" });
+											} else {
+												const message = {
+													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+													 to: req.body.email,
+													 replyTo: process.env.REPLYTOMAIL,
+													 subject: 'You Have Been Flagged',
+													 html: spamUserTemplate(doc, req.body.adminuseremail, req.body.message)
+												};
+												transport.sendMail(message, function(err, info){
+													if(err){
+														console.log(err);
 													} else {
-														const message = {
-															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-															 to: req.body.email,
-															 replyTo: process.env.REPLYTOMAIL,
-															 subject: 'You Have Been Flagged',
-															 html: spamUserTemplate(doc, req.body.adminuseremail, req.body.message)
-														};
-														transport.sendMail(message, function(err, info){
-															if(err){
-																console.log(err);
-															} else {
-																console.log(info);
-															}
-														})
-														res.status(200).send({ auth: true, registered: true, message: 'Admin has Been Added to Spam User Database.'});
+														console.log(info);
 													}
 												})
-											} else {
-												res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
+												res.status(200).send({ auth: true, registered: true, message: 'Admin has Been Added to Spam User Database.'});
 											}
 										})
 									} else {
-										res.status(200).send({ auth: false, registered: true, message: "Your Admin Password does Not Match with our Records" })
+										res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
 									}
 								})
 							} else {
@@ -229,44 +217,38 @@ router.post('/superadmin', function(req, res){
 					if(result){
 						if(result.admin){
 							if(result.superadmin){
-								bcrypt.compare(req.body.adminpass, result.password, function(err, synced){
-									if(synced){
-										User.findOne({ email: req.body.email }, function(error, result){
-											if(result){
-												const spamUser = new SpamUser({
-													name: result.name,
-													email: result.email,
-													post: "SuperAdmin",
-													flaggedby: req.body.adminuseremail,
-													reason: req.body.message
-												})
-												spamUser.save(function(error, doc){
-													if(error){
-														res.status(200).send({ auth: true, registered: false, message: "Error Processing Request. Try Again Later" });
+								User.findOne({ email: req.body.email }, function(error, result){
+									if(result){
+										const spamUser = new SpamUser({
+											name: result.name,
+											email: result.email,
+											post: "SuperAdmin",
+											flaggedby: req.body.adminuseremail,
+											reason: req.body.message
+										})
+										spamUser.save(function(error, doc){
+											if(error){
+												res.status(200).send({ auth: true, registered: false, message: "Error Processing Request. Try Again Later" });
+											} else {
+												const message = {
+													 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+													 to: req.body.email,
+													 replyTo: process.env.REPLYTOMAIL,
+													 subject: 'You Have Been Flagged',
+													 html: spamUserTemplate(doc, req.body.adminuseremail, req.body.message)
+												};
+												transport.sendMail(message, function(err, info){
+													if(err){
+														console.log(err);
 													} else {
-														const message = {
-															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-															 to: req.body.email,
-															 replyTo: process.env.REPLYTOMAIL,
-															 subject: 'You Have Been Flagged',
-															 html: spamUserTemplate(doc, req.body.adminuseremail, req.body.message)
-														};
-														transport.sendMail(message, function(err, info){
-															if(err){
-																console.log(err);
-															} else {
-																console.log(info);
-															}
-														})
-														res.status(200).send({ auth: true, registered: true, message: 'Admin has Been Added to Spam User Database.'});
+														console.log(info);
 													}
 												})
-											} else {
-												res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
+												res.status(200).send({ auth: true, registered: true, message: 'Admin has Been Added to Spam User Database.'});
 											}
 										})
 									} else {
-										res.status(200).send({ auth: false, registered: true, message: "Your Admin Password does Not Match with our Records" })
+										res.status(200).send({ auth: false, registered: false, message: "BAD REQUEST" })
 									}
 								})
 							} else {
