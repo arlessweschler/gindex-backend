@@ -78,64 +78,54 @@ router.post('/admin', function(req, res){
 						User.findOne({ email: req.body.adminuseremail }, function(error, result){
 							if(result){
 								if(result.admin && result.superadmin){
-									if(result.password != null && req.body.adminpass != null){
-										bcrypt.compare(req.body.adminpass, result.password, function(err, synced){
-											if(synced){
-												User.findOne({ email: req.body.email }, function(error, result){
-													if(result){
-														if(result.superadmin){
-															res.status(200).send({ auth: true, changed: false, message: "User is Already a Super Admin" });
-														} else if(result.admin) {
-															res.status(200).send({ auth: true, changed: false, message: "User is Already a Admin" });
-														} else {
-															User.updateOne({ email: req.body.email }, { $set: { admin: true, role: "Admin" } }, function(error){
-																if(!error){
-																	const promoteMessage = {
-																		 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-																		 to: req.body.email,
-																		 bcc: req.body.ADMINEMAIL,
-																		 replyTo: process.env.REPLYTOMAIL,
-																		 subject: 'Account Promoted to Admin Status.',
-																		 html: promotedUserTemplate(result, req.body.adminuseremail, "Admin")
-																	};
-																	transport.sendMail(promoteMessage, function(error, info){
-																		if(error){
-																			console.log(error);
-																		} else {
-																			console.log(info);
-																		}
-																	})
-																	InvitedUser.deleteOne({ email: req.body.email, post: "Admin" }, function(error){
-																		if(error){
-																			console.log(error)
-																		} else {
-																			console.log("Not Found");
-																		}
-																	})
-																	PendingUser.deleteOne({ email: req.body.email, post: "Admin" }, function(error){
-																		if(error){
-																			console.log(error)
-																		} else {
-																			console.log("Not Found");
-																		}
-																	})
-																	res.status(200).send({ auth: true, registered: true, changed: true, message: "User has been Promoted to Admin" });
-																} else {
-																		res.status(200).send({ auth: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
-																}
-															})
-														}
-													} else {
-														res.status(200).send({ auth: true, registered: true, changed: false, message: "No User Found with this Email" });
-													}
-												});
+									User.findOne({ email: req.body.email }, function(error, result){
+										if(result){
+											if(result.superadmin){
+												res.status(200).send({ auth: true, changed: false, message: "User is Already a Super Admin" });
+											} else if(result.admin) {
+												res.status(200).send({ auth: true, changed: false, message: "User is Already a Admin" });
 											} else {
-												res.status(200).send({ auth: false, registered: true, changed: false, message: "Your Admin Password is Wrong" });
+												User.updateOne({ email: req.body.email }, { $set: { admin: true, role: "Admin" } }, function(error){
+													if(!error){
+														const promoteMessage = {
+															 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+															 to: req.body.email,
+															 bcc: req.body.ADMINEMAIL,
+															 replyTo: process.env.REPLYTOMAIL,
+															 subject: 'Account Promoted to Admin Status.',
+															 html: promotedUserTemplate(result, req.body.adminuseremail, "Admin")
+														};
+														transport.sendMail(promoteMessage, function(error, info){
+															if(error){
+																console.log(error);
+															} else {
+																console.log(info);
+															}
+														})
+														InvitedUser.deleteOne({ email: req.body.email, post: "Admin" }, function(error){
+															if(error){
+																console.log(error)
+															} else {
+																console.log("Not Found");
+															}
+														})
+														PendingUser.deleteOne({ email: req.body.email, post: "Admin" }, function(error){
+															if(error){
+																console.log(error)
+															} else {
+																console.log("Not Found");
+															}
+														})
+														res.status(200).send({ auth: true, registered: true, changed: true, message: "User has been Promoted to Admin" });
+													} else {
+															res.status(200).send({ auth: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
+													}
+												})
 											}
-										})
-									} else {
-										res.status(200).send({ auth: false, registered: true, token: null, message: "Password is Null. Please Enter Your Password" });
-									}
+										} else {
+											res.status(200).send({ auth: true, registered: true, changed: false, message: "No User Found with this Email" });
+										}
+									});
 								} else {
 									res.status(200).send({ auth: false, registered: false, changed: false, message: "You are Unauthorized" });
 								}
@@ -163,69 +153,59 @@ router.post('/superadmin', function(req, res){
 						User.findOne({ email: req.body.adminuseremail }, function(error, result){
 							if(result){
 								if(result.admin && result.superadmin){
-									if(result.password != null && req.body.adminpass != null){
-										bcrypt.compare(req.body.adminpass, result.password, function(err, synced){
-											if(synced){
-												if(result.temprestricted){
-													res.status(200).send({ auth: false, registered: true, changed: false, message: "You Have been Temporarily Restricted from Modifying Permissions of Users." });
-												} else {
-													User.findOne({ email: req.body.email }, function(error, result){
-														if(result){
-															if(result.admin){
-																if(result.superadmin){
-																	res.status(200).send({ auth: true, registered: true, changed: false, message: "User is already a Super Admin" });
-																} else {
-																	User.updateOne({ email: req.body.email }, { $set: { superadmin: true, role: "Super Admin" } }, function(error){
-																		if(error){
-																			res.status(200).send({ auth: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
-																		} else {
-																			const promoteMessage = {
-																				 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
-																				 to: req.body.email,
-																				 bcc: req.body.ADMINEMAIL,
-																				 replyTo: process.env.REPLYTOMAIL,
-																				 subject: 'Account Promoted to Super Admin Status.',
-																				 html: promotedUserTemplate(result, req.body.adminuseremail, "Super Admin")
-																			};
-																			transport.sendMail(promoteMessage, function(error, info){
-																				if(error){
-																					console.log(error);
-																				} else {
-																					console.log(info);
-																				}
-																			});
-																			InvitedUser.deleteOne({ email: req.body.email, post: "SuperAdmin" }, function(error){
-																				if(error){
-																					console.log(error)
-																				} else {
-																					console.log("Not Found");
-																				}
-																			})
-																			PendingUser.deleteOne({ email: req.body.email, post: "SuperAdmin" }, function(error){
-																				if(error){
-																					console.log(error)
-																				} else {
-																					console.log(error)
-																				}
-																			})
-																			res.status(200).send({ auth: true, registered: true, changed: true, message: "User has been Promoted to Super Admin" });
-																		}
-																	})
-																}
+									if(result.temprestricted){
+										res.status(200).send({ auth: false, registered: true, changed: false, message: "You Have been Temporarily Restricted from Modifying Permissions of Users." });
+									} else {
+										User.findOne({ email: req.body.email }, function(error, result){
+											if(result){
+												if(result.admin){
+													if(result.superadmin){
+														res.status(200).send({ auth: true, registered: true, changed: false, message: "User is already a Super Admin" });
+													} else {
+														User.updateOne({ email: req.body.email }, { $set: { superadmin: true, role: "Super Admin" } }, function(error){
+															if(error){
+																res.status(200).send({ auth: true, registered: true, changed: false, message: "Some Error Pinging the Servers. Try Again Later." });
 															} else {
-																res.status(200).send({ auth: true, registered: true, changed: false, message: "User Should be a Admin to be Promoted to Super Admin" });
+																const promoteMessage = {
+																	 from: `"${process.env.FRONTENDSITENAME} - Support"<${process.env.EMAILID}>`,
+																	 to: req.body.email,
+																	 bcc: req.body.ADMINEMAIL,
+																	 replyTo: process.env.REPLYTOMAIL,
+																	 subject: 'Account Promoted to Super Admin Status.',
+																	 html: promotedUserTemplate(result, req.body.adminuseremail, "Super Admin")
+																};
+																transport.sendMail(promoteMessage, function(error, info){
+																	if(error){
+																		console.log(error);
+																	} else {
+																		console.log(info);
+																	}
+																});
+																InvitedUser.deleteOne({ email: req.body.email, post: "SuperAdmin" }, function(error){
+																	if(error){
+																		console.log(error)
+																	} else {
+																		console.log("Not Found");
+																	}
+																})
+																PendingUser.deleteOne({ email: req.body.email, post: "SuperAdmin" }, function(error){
+																	if(error){
+																		console.log(error)
+																	} else {
+																		console.log(error)
+																	}
+																})
+																res.status(200).send({ auth: true, registered: true, changed: true, message: "User has been Promoted to Super Admin" });
 															}
-														} else {
-															res.status(200).send({ auth: true, registered: false, changed: false, message: "No User Found with this Email" });
-														}
-													})
+														})
+													}
+												} else {
+													res.status(200).send({ auth: true, registered: true, changed: false, message: "User Should be a Admin to be Promoted to Super Admin" });
 												}
 											} else {
-												res.status(200).send({ auth: false, registered: true, changed: false, message: "Your Admin Password is Wrong" });
+												res.status(200).send({ auth: true, registered: false, changed: false, message: "No User Found with this Email" });
 											}
 										})
-									} else {
-										res.status(200).send({ auth: false, registered: true, token: null, message: "Password is Null. Please Enter Your Password" });
 									}
 								} else {
 									res.status(200).send({ auth: false, registered: false, changed: false, message: "You are Unauthorized" });
