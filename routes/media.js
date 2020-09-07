@@ -77,11 +77,9 @@ router.post('/data', function(req, res){
 						const secondParsed = secondParser(req.body.title);
 						parsed = secondParsed;
 					}
-					console.log(parsed);
 					if(parsed.title){
 						if(parsed.season){
 							axios.get(`${searchPoint.tv}?api_key=${process.env.TMDBAPI}&page=1&query=${encodeURI(parsed.title.toLowerCase())}&include_adult=false`).then(response => {
-								console.log(response);
 								if(response.data.results.length < 1){
 									axios.get(`${searchPoint.movie}?api_key=${process.env.TMDBAPI}&query=${encodeURI(parsed.title.toLowerCase())}&page=1&include_adult=false&primary_release_year=${parsed.year}`).then(response => {
 										console.log(response);
@@ -265,7 +263,6 @@ router.post('/data', function(req, res){
 							})
 						} else {
 							axios.get(`${searchPoint.movie}?api_key=${process.env.TMDBAPI}&query=${encodeURI(parsed.title.toLowerCase())}&page=1&include_adult=false&primary_release_year=${parsed.year}`).then(response => {
-								console.log(response);
 								if(response.data.results.length < 1){
 									axios.get(`${searchPoint.tv}?api_key=${process.env.TMDBAPI}&page=1&query=${encodeURI(parsed.title.toLowerCase())}&include_adult=false`).then(response => {
 										console.log(response);
