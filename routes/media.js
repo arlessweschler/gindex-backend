@@ -82,7 +82,6 @@ router.post('/data', function(req, res){
 							axios.get(`${searchPoint.tv}?api_key=${process.env.TMDBAPI}&page=1&query=${encodeURI(parsed.title.toLowerCase())}&include_adult=false`).then(response => {
 								if(response.data.results.length < 1){
 									axios.get(`${searchPoint.movie}?api_key=${process.env.TMDBAPI}&query=${encodeURI(parsed.title.toLowerCase())}&page=1&include_adult=false&primary_release_year=${parsed.year}`).then(response => {
-										console.log(response);
 										if(response.data.results.length < 1){
 											res.status(200).send({ auth: true, registered: true, data: false });
 										} else {
@@ -265,7 +264,6 @@ router.post('/data', function(req, res){
 							axios.get(`${searchPoint.movie}?api_key=${process.env.TMDBAPI}&query=${encodeURI(parsed.title.toLowerCase())}&page=1&include_adult=false&primary_release_year=${parsed.year}`).then(response => {
 								if(response.data.results.length < 1){
 									axios.get(`${searchPoint.tv}?api_key=${process.env.TMDBAPI}&page=1&query=${encodeURI(parsed.title.toLowerCase())}&include_adult=false`).then(response => {
-										console.log(response);
 										if(response.data.results.length < 1){
 											res.status(200).send({ auth: true, registered: true, data: false });
 										} else {
