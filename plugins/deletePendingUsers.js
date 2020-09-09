@@ -8,7 +8,7 @@ function deletePendingUsers() {
     if(result){
       result.forEach((user, i) => {
         const currentTime = Date.now();
-        const allowedTill = user.pendingFrom + (21600*1000);
+        const allowedTill = user.pendingFrom + (86400*1000);
         if(currentTime > allowedTill){
           PendingUser.deleteOne({ email: user.email }, function(error){
             if(!error){
