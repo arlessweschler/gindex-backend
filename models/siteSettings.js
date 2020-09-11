@@ -15,6 +15,11 @@ const siteSettingsSchema = {
     type: Boolean,
     required: true,
     default: true,
+  },
+  tmdb: {
+    type: Boolean,
+    required: true,
+    default: false,
   }
 }
 
