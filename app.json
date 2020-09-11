@@ -48,6 +48,10 @@
 			"description": "Your G-Index Name. Can be Anything",
 			"required": true
 		},
+		"TMDBAPI": {
+			"description": "Give Your TMDB V3 API Key for Automatic pulling of Video Data.",
+			"required": false
+		},
     "FRONTENDURL": {
 			"description": "Your G-index Domain. This is Must, Otherwise Authentication will Fail.",
 			"required": true
