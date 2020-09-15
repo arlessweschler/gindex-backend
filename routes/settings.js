@@ -15,7 +15,7 @@ router.post('/set', function(req, res){
 					if(result.admin && result.superadmin){
 						Settings.findOne({ cId: process.env.FRONTENDSITENAME }, function(error, settingsData){
 							if(settingsData){
-								Settings.updateOne({ cId: process.env.FRONTENDSITENAME }, { $set: { requests: req.body.requests, adminRequests: req.body.adminrequests } }, function(error){
+								Settings.updateOne({ cId: process.env.FRONTENDSITENAME }, { $set: req.body.settings }, function(error){
 									if(!error){
 										res.status(200).send({ auth: true, registered: true, changed: true, message: "Your Preferences have been Saved." });
 									} else {
@@ -23,11 +23,7 @@ router.post('/set', function(req, res){
 									}
 								})
 							} else {
-								const newData = new Settings({
-									cId: process.env.FRONTENDSITENAME,
-									requests: req.body.requests,
-									adminRequests: req.body.adminrequests
-								});
+								const newData = new Settings(req.body.settings);
 								newData.save(function(error, doc){
 									if(!error){
 										res.status(200).send({ auth: true, registered: true, changed: true, data: doc, message: "Your Preferences have been Saved." });
